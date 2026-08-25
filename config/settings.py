@@ -35,7 +35,14 @@ ALLOWED_HOSTS = [
     host.strip()
     for host in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
     if host.strip()
-]
+] + ['.vercel.app']
+
+CSRF_TRUSTED_ORIGINS = ['https://*.vercel.app']
+
+# Vercel's edge terminates HTTPS and forwards to the app over plain HTTP,
+# setting this header - without telling Django to trust it, every request
+# looks insecure and CSRF/cookie-security checks misbehave.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Application definition
@@ -89,10 +96,30 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+# On Vercel the deployed project files are read-only (only /tmp is
+# writable), so the bundled db.sqlite3 can't be written to as-is. For a
+# demo/preview deployment, copy it into /tmp on cold start so the app is
+# at least usable - NOTE this is not persistent: every cold start (and
+# every separate serverless instance) gets its own fresh copy, so data
+# written here can disappear at any time. For real, permanent data, host
+# this on a platform with persistent storage instead (Railway, Render,
+# PythonAnywhere, a VPS, etc.).
+if os.environ.get('VERCEL'):
+    import shutil
+
+    _writable_db = Path('/tmp/db.sqlite3')
+
+    if not _writable_db.exists():
+        shutil.copy(BASE_DIR / 'db.sqlite3', _writable_db)
+
+    _db_path = _writable_db
+else:
+    _db_path = BASE_DIR / 'db.sqlite3'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': _db_path,
     }
 }
 
