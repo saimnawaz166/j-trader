@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Suppliers{% endblock %}
+
+{% block page_title %}Suppliers{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+        <h1>Suppliers</h1>
+        <p>Manage your suppliers</p>
+    </div>
+
+    <a
+        href="{% url 'supplier_create' %}"
+        class="btn btn-primary">
+        + Add Supplier
+    </a>
+
+</div>
+
+
+<div class="table-container">
+
+    <table class="datatable" data-ajax="{% url 'supplier_data' %}">
+
+        <thead>
+
+            <tr>
+                <th data-field="name">Name</th>
+                <th data-field="phone">Phone</th>
+                <th data-field="email">Email</th>
+                <th data-field="address">Address</th>
+            </tr>
+
+        </thead>
+
+        <tbody></tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

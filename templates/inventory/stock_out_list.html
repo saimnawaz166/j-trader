@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Stock Out{% endblock %}
+
+{% block page_title %}Stock Out{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+        <h1>Stock Out</h1>
+        <p>Manage sold and outgoing inventory</p>
+    </div>
+
+    <div>
+
+        <a
+            href="{% url 'customer_list' %}"
+            class="btn btn-secondary">
+            Customers
+        </a>
+
+        <a
+            href="{% url 'stock_out_create' %}"
+            class="btn btn-primary">
+            + Stock Out
+        </a>
+
+    </div>
+
+</div>
+
+
+<div class="table-container">
+
+    <table class="datatable" data-ajax="{% url 'stock_out_data' %}">
+
+        <thead>
+
+            <tr>
+                <th data-field="invoice_number">Invoice #</th>
+                <th data-field="date">Date</th>
+                <th data-field="customer">Customer</th>
+                <th data-field="item_name">Item</th>
+                <th data-field="quantity">Quantity</th>
+                <th data-field="unit_price">Unit Price</th>
+                <th data-field="total_amount">Total</th>
+                <th data-field="actions" data-orderable="false" data-searchable="false">Actions</th>
+            </tr>
+
+        </thead>
+
+        <tbody></tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

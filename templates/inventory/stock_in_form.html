@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Add Stock{% endblock %}
+
+{% block page_title %}Add Stock{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+        <h1>Add Stock In</h1>
+        <p>Record incoming inventory</p>
+    </div>
+
+    <a
+        href="{% url 'stock_in_list' %}"
+        class="btn btn-secondary">
+        Back
+    </a>
+
+</div>
+
+
+<div class="form-card">
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+
+        <div class="form-group">
+
+            <label>Invoice Number</label>
+
+            <input
+                type="text"
+                value="{{ next_invoice_number }}"
+                disabled
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Supplier *</label>
+
+            <select
+                name="supplier"
+                required>
+
+                <option value="">
+                    Select Supplier
+                </option>
+
+                {% for supplier in suppliers %}
+
+                <option value="{{ supplier.id }}">
+                    {{ supplier.name }}
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+            <br><br>
+
+            <a
+                href="{% url 'supplier_create' %}"
+                class="btn btn-secondary">
+                + New Supplier
+            </a>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Item Name *</label>
+
+            <input
+                type="text"
+                name="item_name"
+                required
+                placeholder="Example: Steel Pipe 2 inch"
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Quantity *</label>
+
+            <input
+                type="number"
+                name="quantity"
+                min="1"
+                required
+                placeholder="Enter quantity"
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Unit Purchase Cost *</label>
+
+            <input
+                type="number"
+                name="unit_cost"
+                step="0.01"
+                min="0"
+                required
+                placeholder="Enter purchase price"
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Date *</label>
+
+            <input
+                type="date"
+                name="date"
+                value="{{ today|date:'Y-m-d' }}"
+                required
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Notes</label>
+
+            <textarea
+                name="notes"
+                placeholder="Optional notes..."
+            ></textarea>
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="btn btn-primary">
+
+            Add Stock
+
+        </button>
+
+    </form>
+
+</div>
+
+{% endblock %}

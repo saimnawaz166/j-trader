@@ -1,0 +1,483 @@
+{% extends "base.html" %}
+
+{% block title %}Expenses{% endblock %}
+
+{% block page_title %}Expenses{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+
+    .exp-page {
+        --ink-950: #0a0f1c;
+        --accent-blue: #3b82f6;
+        --accent-blue-dark: #2563eb;
+        --accent-amber: #f5a524;
+        --slate-300: #cbd5e1;
+        --slate-400: #94a3b8;
+        --slate-500: #64748b;
+        --slate-600: #475569;
+        --slate-900: #0f172a;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .exp-eyebrow {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        color: var(--accent-blue-dark);
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+
+    .exp-page h1 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 32px;
+        letter-spacing: -0.01em;
+        color: var(--slate-900);
+        margin: 0 0 6px;
+    }
+
+    .exp-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 26px;
+    }
+
+    .exp-header-row p {
+        font-size: 15px;
+        color: var(--slate-500);
+        margin: 0;
+    }
+
+    .btn-add {
+        display: inline-block;
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        font-size: 14.5px;
+        color: #ffffff;
+        background: var(--accent-blue);
+        border: none;
+        border-radius: 8px;
+        padding: 12px 20px;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background 0.15s ease;
+    }
+
+    .btn-add:hover {
+        background: var(--accent-blue-dark);
+    }
+    .btn-print {
+    display: inline-block;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 14.5px;
+    color: var(--slate-600);
+    background: #ffffff;
+    border: 1px solid #dde3ec;
+    border-radius: 8px;
+    padding: 12px 20px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btn-print:hover {
+    border-color: var(--accent-blue);
+    color: var(--accent-blue-dark);
+}
+
+@media print {
+
+    .sidebar,
+    .topbar,
+    .no-print {
+        display: none !important;
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+    }
+
+    .exp-hero-card {
+        background: #ffffff !important;
+        color: var(--slate-900) !important;
+        border: 2px solid var(--slate-900);
+    }
+
+    .exp-hero-card .label,
+    .exp-hero-card .sub {
+        color: var(--slate-600) !important;
+    }
+
+    .exp-summary-grid,
+    .exp-table-container {
+        box-shadow: none !important;
+    }
+}
+
+    /* ---------- Top summary row ---------- */
+
+    .exp-summary-grid {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+
+    .exp-hero-card {
+        width: 260px;
+        flex-shrink: 0;
+    }
+
+    .exp-breakdown-card {
+        flex: 1;
+        min-width: 0;
+    }
+
+    @media (max-width: 800px) {
+        .exp-summary-grid {
+            flex-direction: column;
+        }
+
+        .exp-hero-card {
+            width: auto;
+        }
+    }
+
+    .exp-hero-card {
+        background: var(--ink-950);
+        border-radius: 14px;
+        padding: 24px 26px;
+        color: #f4f6fb;
+    }
+
+    .exp-hero-card .label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--slate-400);
+        margin-bottom: 10px;
+    }
+
+    .exp-hero-card .value {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 30px;
+        letter-spacing: -0.01em;
+    }
+
+    .exp-hero-card .sub {
+        margin-top: 10px;
+        font-size: 12.5px;
+        color: var(--slate-400);
+    }
+
+    .exp-breakdown-card {
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 22px 26px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .exp-breakdown-card h3 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 15.5px;
+        font-weight: 600;
+        color: var(--slate-900);
+        margin: 0 0 16px;
+    }
+
+    .exp-bar-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+        font-size: 13.5px;
+    }
+
+    .exp-bar-row .cat-tag {
+        flex: 0 0 110px;
+        text-align: center;
+    }
+
+    .exp-bar-row .exp-bar-track {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .exp-bar-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .exp-bar-track {
+        height: 8px;
+        border-radius: 999px;
+        background: #eef1f6;
+        overflow: hidden;
+    }
+
+    .exp-bar-fill {
+        height: 100%;
+        border-radius: 999px;
+    }
+
+    .exp-bar-amount {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12.5px;
+        color: var(--slate-600);
+        text-align: right;
+        flex: 0 0 90px;
+    }
+
+    .exp-breakdown-empty {
+        font-size: 13.5px;
+        color: var(--slate-500);
+    }
+
+    /* ---------- Category tag + bar colors ---------- */
+
+    .cat-rent        { background: #dbeafe; color: #1e40af; }
+    .cat-utilities   { background: #fef3c7; color: #92400e; }
+    .cat-salaries    { background: #d1fae5; color: #065f46; }
+    .cat-transport   { background: #ede9fe; color: #5b21b6; }
+    .cat-maintenance { background: #ffe4e6; color: #9f1239; }
+    .cat-supplies    { background: #cffafe; color: #155e75; }
+    .cat-other       { background: #f1f5f9; color: #475569; }
+
+    .bar-rent        { background: #3b82f6; }
+    .bar-utilities   { background: #f5a524; }
+    .bar-salaries    { background: #10b981; }
+    .bar-transport   { background: #8b5cf6; }
+    .bar-maintenance { background: #f43f5e; }
+    .bar-supplies    { background: #06b6d4; }
+    .bar-other       { background: #94a3b8; }
+
+    .cat-tag {
+        display: inline-block;
+        font-size: 11.5px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 20px;
+        white-space: nowrap;
+    }
+
+    /* ---------- Search ---------- */
+
+    .exp-search {
+        margin-bottom: 18px;
+    }
+
+    .exp-search form {
+        display: flex;
+        gap: 10px;
+    }
+
+    .exp-search input[type="text"] {
+        flex: 1;
+        max-width: 340px;
+        padding: 11px 14px;
+        font-family: 'Inter', sans-serif;
+        font-size: 14.5px;
+        border: 1px solid #dde3ec;
+        border-radius: 8px;
+        background: #ffffff;
+    }
+
+    .exp-search input[type="text"]:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.14);
+    }
+
+    .exp-search button {
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        font-size: 14px;
+        padding: 11px 18px;
+        border: 1px solid #dde3ec;
+        background: #ffffff;
+        border-radius: 8px;
+        cursor: pointer;
+        color: var(--slate-600);
+    }
+
+    .exp-search button:hover {
+        border-color: var(--accent-blue);
+        color: var(--accent-blue-dark);
+    }
+
+    /* ---------- Table ---------- */
+
+    .exp-table-container {
+        background: #ffffff;
+        border-radius: 12px;
+        overflow-x: auto;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .exp-table-container table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .exp-table-container th {
+        text-align: left;
+        font-size: 11.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--slate-500);
+        padding: 14px 20px;
+        border-bottom: 1px solid #eef1f6;
+        white-space: nowrap;
+    }
+
+    .exp-table-container td {
+        padding: 15px 20px;
+        font-size: 14.5px;
+        color: var(--slate-900);
+        border-bottom: 1px solid #f3f5f9;
+        vertical-align: middle;
+    }
+
+    .exp-table-container tr:last-child td {
+        border-bottom: none;
+    }
+
+    .exp-amount {
+        font-family: 'JetBrains Mono', monospace;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .exp-notes {
+        color: var(--slate-500);
+        max-width: 220px;
+    }
+
+    .exp-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .exp-actions form {
+        display: inline-flex;
+        margin: 0;
+    }
+
+    .exp-btn-edit,
+    .exp-btn-delete {
+        font-family: 'Inter', sans-serif;
+        font-size: 12.5px;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: 1px solid #dde3ec;
+        text-decoration: none;
+        cursor: pointer;
+        background: #ffffff;
+    }
+
+    .exp-btn-edit {
+        color: var(--slate-600);
+    }
+
+    .exp-btn-edit:hover {
+        border-color: var(--accent-blue);
+        color: var(--accent-blue-dark);
+    }
+
+    .exp-btn-delete {
+        color: #9f1239;
+    }
+
+    .exp-btn-delete:hover {
+        border-color: #f43f5e;
+        background: #fff1f2;
+    }
+
+    .exp-empty {
+        text-align: center;
+        padding: 34px;
+        color: var(--slate-500);
+        font-size: 14px;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="exp-page">
+
+    <div class="exp-header-row">
+        <div>
+            <div class="exp-eyebrow">Expense Ledger &mdash; {{ today|date:"F Y" }}</div>
+            <h1>Expenses</h1>
+            <p>Every cost logged, one line at a time.</p>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+    <a href="{% url 'expense_print' %}" target="_blank" class="btn-print no-print">
+        Print
+    </a>
+
+    <a href="{% url 'expense_create' %}" class="btn-add no-print">
+        + Add Expense
+    </a>
+</div>
+    </div>
+
+    <div class="exp-summary-grid">
+
+        <div class="exp-hero-card">
+            <div class="label">This Month</div>
+            <div class="value">Rs {{ month_total|floatformat:0 }}</div>
+            <div class="sub">Rs {{ total|floatformat:0 }} recorded in total</div>
+        </div>
+
+        <div class="exp-breakdown-card">
+            <h3>Where it went this month</h3>
+
+            {% if category_breakdown %}
+                {% for row in category_breakdown %}
+                <div class="exp-bar-row">
+                    <span class="cat-tag cat-{{ row.category }}">{{ row.label }}</span>
+                    <div class="exp-bar-track">
+                        <div class="exp-bar-fill bar-{{ row.category }}" style="width: {% widthratio row.total max_category_total 100 %}%;"></div>
+                    </div>
+                    <span class="exp-bar-amount">Rs {{ row.total|floatformat:0 }}</span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="exp-breakdown-empty">No expenses recorded this month yet.</p>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <div class="exp-table-container">
+        <table class="datatable" data-ajax="{% url 'expense_data' %}">
+            <thead>
+                <tr>
+                    <th data-field="title">Title</th>
+                    <th data-field="category" data-orderable="false">Category</th>
+                    <th data-field="amount">Amount</th>
+                    <th data-field="date">Date</th>
+                    <th data-field="notes" data-orderable="false">Notes</th>
+                    <th data-field="actions" class="no-print" data-orderable="false" data-searchable="false">Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}

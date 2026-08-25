@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Stock In{% endblock %}
+
+{% block page_title %}Stock In{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+        <h1>Stock In</h1>
+        <p>Manage purchased and incoming stock</p>
+    </div>
+
+    <div>
+
+        <a
+            href="{% url 'supplier_list' %}"
+            class="btn btn-secondary">
+            Suppliers
+        </a>
+
+        <a
+            href="{% url 'stock_in_create' %}"
+            class="btn btn-primary">
+            + Stock In
+        </a>
+
+    </div>
+
+</div>
+
+
+<div class="table-container">
+
+    <table class="datatable" data-ajax="{% url 'stock_in_data' %}">
+
+        <thead>
+
+            <tr>
+                <th data-field="invoice_number">Invoice #</th>
+                <th data-field="date">Date</th>
+                <th data-field="supplier">Supplier</th>
+                <th data-field="item_name">Item</th>
+                <th data-field="quantity">Quantity</th>
+                <th data-field="unit_cost">Unit Cost</th>
+                <th data-field="total_amount">Total</th>
+                <th data-field="actions" data-orderable="false" data-searchable="false">Actions</th>
+            </tr>
+
+        </thead>
+
+        <tbody></tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

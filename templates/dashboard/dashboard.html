@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+
+    .dash-page {
+        --ink-950: #0a0f1c;
+        --ink-800: #131b2e;
+        --accent-blue: #3b82f6;
+        --accent-blue-dark: #2563eb;
+        --accent-amber: #f5a524;
+        --slate-300: #cbd5e1;
+        --slate-400: #94a3b8;
+        --slate-500: #64748b;
+        --slate-600: #475569;
+        --slate-900: #0f172a;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .dash-eyebrow {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        color: var(--accent-blue-dark);
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+
+    .dash-page h1 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 32px;
+        letter-spacing: -0.01em;
+        color: var(--slate-900);
+        margin: 0 0 6px;
+    }
+
+    .dash-page .page-header p {
+        font-size: 15px;
+        color: var(--slate-500);
+    }
+
+    /* ---------- Primary metric cards ---------- */
+
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .metric-card {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 20px 22px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        transition: box-shadow 0.15s ease, transform 0.15s ease;
+    }
+
+    .metric-card:hover {
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+        transform: translateY(-1px);
+    }
+
+    .metric-label {
+        font-size: 12.5px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--slate-500);
+        margin-bottom: 10px;
+    }
+
+    .metric-value {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 26px;
+        color: var(--slate-900);
+        letter-spacing: -0.01em;
+    }
+
+    .metric-tag {
+        display: inline-block;
+        margin-top: 10px;
+        font-size: 11.5px;
+        font-weight: 600;
+        padding: 3px 9px;
+        border-radius: 20px;
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    /* ---------- Secondary ledger strip ---------- */
+
+    .ledger-strip {
+        background: var(--ink-950);
+        border-radius: 12px;
+        padding: 18px 26px;
+        margin-bottom: 30px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 26px 34px;
+    }
+
+    .ledger-item {
+        min-width: 120px;
+    }
+
+    .ledger-item .label {
+        font-size: 11.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--slate-400);
+        margin-bottom: 5px;
+    }
+
+    .ledger-item .value {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 17px;
+        font-weight: 500;
+        color: #f4f6fb;
+    }
+
+    /* ---------- Section headings & tables ---------- */
+
+    .dash-section-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 19px;
+        font-weight: 600;
+        color: var(--slate-900);
+        margin: 0 0 14px;
+    }
+
+    .dash-table-container {
+        background: #ffffff;
+        border-radius: 12px;
+        overflow-x: auto;
+        margin-bottom: 30px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .dash-table-container table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .dash-table-container th {
+        text-align: left;
+        font-size: 11.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--slate-500);
+        padding: 14px 20px;
+        border-bottom: 1px solid #eef1f6;
+    }
+
+    .dash-table-container td {
+        padding: 15px 20px;
+        font-size: 14.5px;
+        color: var(--slate-900);
+        border-bottom: 1px solid #f3f5f9;
+    }
+
+    .dash-table-container tr:last-child td {
+        border-bottom: none;
+    }
+
+    .dash-table-container .mono-amount {
+        font-family: 'JetBrains Mono', monospace;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .dash-sku {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px;
+        color: var(--slate-500);
+    }
+
+    .dash-empty {
+        text-align: center;
+        padding: 34px;
+        color: var(--slate-500);
+        font-size: 14px;
+    }
+
+    .status-tag {
+        display: inline-block;
+        font-size: 11.5px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 20px;
+    }
+
+    .status-tag.low {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-tag.paid {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status-tag.pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-tag.sale {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status-tag.purchase {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="dash-page">
+
+    <div class="page-header">
+        <div>
+            <div class="dash-eyebrow">Stock Manifest &mdash; {{ today|date:"d M Y" }}</div>
+            <h1>Overview</h1>
+            <p>Here's where your stock, sales and payments stand right now.</p>
+        </div>
+    </div>
+
+    <!-- Primary metrics -->
+
+    <div class="metric-grid">
+
+        <div class="metric-card">
+            <div class="metric-label">Invoice Revenue (All-Time)</div>
+            <div class="metric-value">Rs {{ total_revenue|floatformat:0 }}</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-label">Pending Payments</div>
+            <div class="metric-value">Rs {{ pending_payments|floatformat:0 }}</div>
+            {% if pending_payments > 0 %}
+                <span class="metric-tag">Follow up</span>
+            {% endif %}
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-label">Customers</div>
+            <div class="metric-value">{{ total_customers }}</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-label">Suppliers</div>
+            <div class="metric-value">{{ total_suppliers }}</div>
+        </div>
+
+    </div>
+
+    <!-- Secondary ledger strip -->
+
+    <div class="ledger-strip">
+
+        <div class="ledger-item">
+            <div class="label">Sales (This Month)</div>
+            <div class="value">Rs {{ monthly_sales|floatformat:0 }}</div>
+        </div>
+
+        <div class="ledger-item">
+            <div class="label">Purchases (This Month)</div>
+            <div class="value">Rs {{ monthly_purchases|floatformat:0 }}</div>
+        </div>
+
+        <div class="ledger-item">
+            <div class="label">Expenses (This Month)</div>
+            <div class="value">Rs {{ monthly_expenses|floatformat:0 }}</div>
+        </div>
+
+    </div>
+
+    <!-- Recent invoices -->
+
+    <h2 class="dash-section-title">Recent Invoices</h2>
+
+    <div class="dash-table-container">
+        <table class="datatable">
+            <thead>
+                <tr>
+                    <th>Invoice #</th>
+                    <th>Type</th>
+                    <th>Date</th>
+                    <th>Grand Total</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in recent_invoices %}
+                <tr>
+                    <td class="dash-sku">{{ invoice.invoice_number }}</td>
+                    <td>
+                        {% if invoice.invoice_type == "purchase" %}
+                            <span class="status-tag purchase">Purchase</span>
+                        {% else %}
+                            <span class="status-tag sale">Sale</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ invoice.date }}</td>
+                    <td class="mono-amount">Rs {{ invoice.grand_total|floatformat:0 }}</td>
+                    <td>
+                        {% if invoice.remaining_amount > 0 %}
+                            <span class="status-tag pending">Rs {{ invoice.remaining_amount|floatformat:0 }} due</span>
+                        {% else %}
+                            <span class="status-tag paid">Paid</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}

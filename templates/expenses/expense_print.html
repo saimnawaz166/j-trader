@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Report - {{ today|date:"F Y" }}</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #1a1a1a;
+            background: #e5e7eb;
+        }
+
+        .toolbar {
+            position: sticky;
+            top: 0;
+            background: #111827;
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .toolbar a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .toolbar a:hover {
+            color: #ffffff;
+        }
+
+        .toolbar button {
+            background: #3b82f6;
+            color: #ffffff;
+            border: none;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 10px 20px;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+
+        .toolbar button:hover {
+            background: #2563eb;
+        }
+
+        .sheet {
+            max-width: 800px;
+            margin: 30px auto;
+            background: #ffffff;
+            padding: 55px 60px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+        }
+
+        .doc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 3px solid #111827;
+            padding-bottom: 24px;
+            margin-bottom: 30px;
+        }
+
+        .biz-name {
+            font-size: 22px;
+            font-weight: bold;
+            margin: 0 0 6px;
+        }
+
+        .biz-details {
+            font-size: 13px;
+            color: #4b5563;
+            line-height: 1.6;
+        }
+
+        .doc-title {
+            text-align: right;
+        }
+
+        .doc-title h1 {
+            margin: 0;
+            font-size: 30px;
+            letter-spacing: 0.05em;
+            color: #111827;
+        }
+
+        .doc-title .sub {
+            font-size: 14px;
+            color: #4b5563;
+            margin-top: 6px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .summary-block h3 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #6b7280;
+            margin: 0 0 8px;
+        }
+
+        .summary-block .value {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .summary-block.right {
+            text-align: right;
+        }
+
+        .breakdown {
+            margin-bottom: 30px;
+        }
+
+        .breakdown h3 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #6b7280;
+            margin: 0 0 10px;
+        }
+
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 14px;
+            border-bottom: 1px solid #f0f1f3;
+        }
+
+        .breakdown-row:last-child {
+            border-bottom: none;
+        }
+
+        table.items {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 28px;
+        }
+
+        table.items th {
+            text-align: left;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #6b7280;
+            padding: 10px 8px;
+            border-bottom: 2px solid #111827;
+        }
+
+        table.items th.num,
+        table.items td.num {
+            text-align: right;
+        }
+
+        table.items td {
+            padding: 10px 8px;
+            font-size: 13.5px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .totals {
+            width: 280px;
+            margin-left: auto;
+            margin-bottom: 30px;
+        }
+
+        .totals .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 7px 0;
+            font-size: 14px;
+        }
+
+        .totals .row.grand {
+            border-top: 2px solid #111827;
+            margin-top: 6px;
+            padding-top: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .empty {
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+            padding: 20px 0;
+        }
+
+        @media print {
+
+            body {
+                background: #ffffff;
+            }
+
+            .toolbar {
+                display: none;
+            }
+
+            .sheet {
+                box-shadow: none;
+                margin: 0;
+                padding: 0;
+                max-width: none;
+            }
+
+            @page {
+                margin: 18mm;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="toolbar">
+        <a href="{% url 'expense_list' %}">&larr; Back to Expenses</a>
+        <button onclick="window.print()">Print</button>
+    </div>
+
+    <div class="sheet">
+
+        <div class="doc-header">
+            <div>
+                <p class="biz-name">Expense Report</p>
+                <div class="biz-details">
+                    {% if query %}Filtered by &ldquo;{{ query }}&rdquo;{% else %}All recorded expenses{% endif %}
+                </div>
+            </div>
+
+            <div class="doc-title">
+                <h1>EXPENSES</h1>
+                <div class="sub">{{ today|date:"F Y" }}</div>
+            </div>
+        </div>
+
+        <div class="summary-row">
+
+            <div class="summary-block">
+                <h3>This Month</h3>
+                <div class="value">Rs {{ month_total|floatformat:0 }}</div>
+            </div>
+
+            <div class="summary-block right">
+                <h3>Shown Below</h3>
+                <div class="value">Rs {{ total|floatformat:0 }}</div>
+            </div>
+
+        </div>
+
+        {% if category_breakdown %}
+        <div class="breakdown">
+            <h3>This Month by Category</h3>
+            {% for row in category_breakdown %}
+            <div class="breakdown-row">
+                <span>{{ row.label }}</span>
+                <span>Rs {{ row.total|floatformat:0 }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <table class="items">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Date</th>
+                    <th class="num">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for expense in expenses %}
+                <tr>
+                    <td>{{ expense.title }}</td>
+                    <td>{{ expense.get_category_display }}</td>
+                    <td>{{ expense.date|date:"d M Y" }}</td>
+                    <td class="num">Rs {{ expense.amount|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="empty">No expenses to show.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="totals">
+            <div class="row grand">
+                <span>Total</span>
+                <span>Rs {{ total|floatformat:2 }}</span>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if expense %}Edit Expense{% else %}Add Expense{% endif %}
+{% endblock %}
+
+{% block page_title %}
+    {% if expense %}Edit Expense{% else %}Add Expense{% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+
+    .exp-form-page {
+        --accent-blue: #3b82f6;
+        --accent-blue-dark: #2563eb;
+        --slate-500: #64748b;
+        --slate-900: #0f172a;
+        font-family: 'Inter', Arial, sans-serif;
+        max-width: 560px;
+    }
+
+    .exp-form-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 22px;
+    }
+
+    .exp-form-page h1 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 26px;
+        color: var(--slate-900);
+        margin: 0;
+    }
+
+    .exp-back-link {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--slate-500);
+        text-decoration: none;
+        border: 1px solid #dde3ec;
+        padding: 9px 16px;
+        border-radius: 7px;
+    }
+
+    .exp-back-link:hover {
+        border-color: var(--accent-blue);
+        color: var(--accent-blue-dark);
+    }
+
+    .exp-form-card {
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 30px 32px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .exp-field {
+        display: block;
+        margin-bottom: 20px;
+    }
+
+    .exp-field span {
+        display: block;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--slate-500);
+        margin-bottom: 7px;
+    }
+
+    .exp-field input,
+    .exp-field select,
+    .exp-field textarea {
+        width: 100%;
+        padding: 12px 14px;
+        font-family: 'Inter', sans-serif;
+        font-size: 15px;
+        color: var(--slate-900);
+        background: #ffffff;
+        border: 1px solid #dde3ec;
+        border-radius: 8px;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .exp-field textarea {
+        min-height: 90px;
+        resize: vertical;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .exp-field input:focus,
+    .exp-field select:focus,
+    .exp-field textarea:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.14);
+    }
+
+    .exp-row-2 {
+        display: flex;
+        gap: 16px;
+    }
+
+    .exp-row-2 .exp-field {
+        flex: 1;
+        min-width: 0;
+    }
+
+    @media (max-width: 520px) {
+        .exp-row-2 {
+            flex-direction: column;
+        }
+    }
+
+    .exp-submit {
+        width: 100%;
+        padding: 13px;
+        margin-top: 4px;
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        font-size: 15px;
+        color: #ffffff;
+        background: var(--accent-blue);
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.15s ease;
+    }
+
+    .exp-submit:hover {
+        background: var(--accent-blue-dark);
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="exp-form-page">
+
+    <div class="exp-form-header">
+        <h1>
+            {% if expense %}
+                Edit Expense
+            {% else %}
+                Add Expense
+            {% endif %}
+        </h1>
+
+        <a href="{% url 'expense_list' %}" class="exp-back-link">Back</a>
+    </div>
+
+    <div class="exp-form-card">
+
+        <form method="POST">
+
+            {% csrf_token %}
+
+            <label class="exp-field">
+                <span>Title</span>
+                <input
+                    type="text"
+                    name="title"
+                    required
+                    value="{{ expense.title|default:'' }}"
+                    placeholder="Example: Office electricity bill"
+                >
+            </label>
+
+            <div class="exp-row-2">
+
+                <label class="exp-field">
+                    <span>Category</span>
+                    <select name="category" required>
+                        {% for value, label in categories %}
+                        <option value="{{ value }}" {% if expense.category == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label class="exp-field">
+                    <span>Amount (Rs)</span>
+                    <input
+                        type="number"
+                        step="0.01"
+                        name="amount"
+                        required
+                        value="{{ expense.amount|default:'' }}"
+                    >
+                </label>
+
+            </div>
+
+            <label class="exp-field">
+                <span>Date</span>
+                <input
+                    type="date"
+                    name="date"
+                    required
+                    value="{{ expense.date|date:'Y-m-d'|default:today|date:'Y-m-d' }}"
+                >
+            </label>
+
+            <label class="exp-field">
+                <span>Notes</span>
+                <textarea
+                    name="notes"
+                    placeholder="Optional notes..."
+                >{{ expense.notes|default:'' }}</textarea>
+            </label>
+
+            <button type="submit" class="exp-submit">
+                {% if expense %}
+                    Update Expense
+                {% else %}
+                    Save Expense
+                {% endif %}
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

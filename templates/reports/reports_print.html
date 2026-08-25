@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Report - {{ today|date:"F Y" }}</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #1a1a1a;
+            background: #e5e7eb;
+        }
+
+        .toolbar {
+            position: sticky;
+            top: 0;
+            background: #111827;
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .toolbar a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .toolbar a:hover {
+            color: #ffffff;
+        }
+
+        .toolbar button {
+            background: #3b82f6;
+            color: #ffffff;
+            border: none;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 10px 20px;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+
+        .toolbar button:hover {
+            background: #2563eb;
+        }
+
+        .sheet {
+            max-width: 800px;
+            margin: 30px auto;
+            background: #ffffff;
+            padding: 55px 60px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+        }
+
+        .doc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 3px solid #111827;
+            padding-bottom: 24px;
+            margin-bottom: 30px;
+        }
+
+        .biz-name {
+            font-size: 22px;
+            font-weight: bold;
+            margin: 0 0 6px;
+        }
+
+        .biz-details {
+            font-size: 13px;
+            color: #4b5563;
+            line-height: 1.6;
+        }
+
+        .doc-title {
+            text-align: right;
+        }
+
+        .doc-title h1 {
+            margin: 0;
+            font-size: 30px;
+            letter-spacing: 0.05em;
+            color: #111827;
+        }
+
+        .doc-title .sub {
+            font-size: 14px;
+            color: #4b5563;
+            margin-top: 6px;
+        }
+
+        .pnl {
+            border: 2px solid #111827;
+            border-radius: 6px;
+            padding: 20px 24px;
+            margin-bottom: 30px;
+        }
+
+        .pnl h3 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #6b7280;
+            margin: 0 0 8px;
+        }
+
+        .pnl .value {
+            font-size: 26px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .pnl .formula {
+            font-size: 13px;
+            color: #4b5563;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h3 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #6b7280;
+            margin: 0 0 10px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 8px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 14px;
+        }
+
+        .row.total {
+            border-top: 1px solid #e5e7eb;
+            margin-top: 4px;
+            padding-top: 10px;
+            font-weight: bold;
+        }
+
+        .empty {
+            font-size: 13.5px;
+            color: #6b7280;
+        }
+
+        @media print {
+
+            body {
+                background: #ffffff;
+            }
+
+            .toolbar {
+                display: none;
+            }
+
+            .sheet {
+                box-shadow: none;
+                margin: 0;
+                padding: 0;
+                max-width: none;
+            }
+
+            @page {
+                margin: 18mm;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="toolbar">
+        <a href="{% url 'reports_home' %}">&larr; Back to Reports</a>
+        <button onclick="window.print()">Print</button>
+    </div>
+
+    <div class="sheet">
+
+        <div class="doc-header">
+            <div>
+                <p class="biz-name">Business Report</p>
+                <div class="biz-details">How this month is shaping up</div>
+            </div>
+
+            <div class="doc-title">
+                <h1>REPORT</h1>
+                <div class="sub">{{ today|date:"F Y" }}</div>
+            </div>
+        </div>
+
+        <div class="pnl">
+            <h3>This Month's Result</h3>
+            <div class="value">
+                {% if estimated_profit >= 0 %}+Rs {{ estimated_profit|floatformat:0 }}{% else %}&minus;Rs {{ estimated_profit|floatformat:0|cut:"-" }}{% endif %}
+            </div>
+            <div class="formula">
+                Sales Rs {{ monthly_sales.total|default:0|floatformat:0 }}
+                &minus; Purchases Rs {{ monthly_purchases.total|default:0|floatformat:0 }}
+                &minus; Expenses Rs {{ monthly_expenses_total|floatformat:0 }}
+                = Rs {{ estimated_profit|floatformat:0 }}
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Invoice Collection</h3>
+
+            {% if invoice_totals.revenue %}
+                <div class="row"><span>Total invoices</span><span>{{ invoice_totals.count|default:0 }}</span></div>
+                <div class="row"><span>Total billed</span><span>Rs {{ invoice_totals.revenue|floatformat:2 }}</span></div>
+                <div class="row"><span>Collected</span><span>Rs {{ invoice_totals.collected|default:0|floatformat:2 }}</span></div>
+                <div class="row total"><span>Pending</span><span>Rs {{ invoice_totals.pending|default:0|floatformat:2 }}</span></div>
+            {% else %}
+                <p class="empty">No invoices yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h3>Expense Breakdown &mdash; {{ today|date:"F Y" }}</h3>
+
+            {% if expense_breakdown %}
+                {% for row in expense_breakdown %}
+                <div class="row"><span>{{ row.label }}</span><span>Rs {{ row.total|floatformat:2 }}</span></div>
+                {% endfor %}
+                <div class="row total"><span>Total</span><span>Rs {{ monthly_expenses_total|floatformat:2 }}</span></div>
+            {% else %}
+                <p class="empty">No expenses recorded this month.</p>
+            {% endif %}
+        </div>
+
+    </div>
+
+</body>
+</html>

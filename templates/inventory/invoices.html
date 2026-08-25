@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Invoices{% endblock %}
+
+{% block page_title %}Invoices{% endblock %}
+
+{% block extra_head %}
+<style>
+
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge-sale {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge-purchase {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>Invoices</h1>
+        <p>Sales invoices (from Stock Out and manual entry) and purchase invoices (from Stock In)</p>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'invoices_export' %}" id="downloadExcelLink" class="btn btn-secondary">
+            Download Excel
+        </a>
+
+        <a href="{% url 'add_invoice' %}" class="btn btn-primary">
+            + New Invoice
+        </a>
+    </div>
+</div>
+
+<div class="table-container">
+
+    <table id="invoicesTable" class="datatable" data-ajax="{% url 'invoices_data' %}">
+
+        <thead>
+            <tr>
+                <th data-field="invoice_number">Invoice #</th>
+                <th data-field="invoice_type" data-orderable="false" data-searchable="false">Type</th>
+                <th data-field="date">Date</th>
+                <th data-field="party">Party</th>
+                <th data-field="subtotal">Subtotal</th>
+                <th data-field="discount">Discount</th>
+                <th data-field="grand_total">Grand Total</th>
+                <th data-field="paid_amount">Paid</th>
+                <th data-field="remaining_amount">Remaining</th>
+                <th data-field="actions" data-orderable="false" data-searchable="false">Actions</th>
+            </tr>
+        </thead>
+
+        <tbody></tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    $(function () {
+        // Keep the Excel download in sync with whatever's currently
+        // typed into the table's own search box.
+        $('#invoicesTable').on('search.dt', function () {
+            var value = $('#invoicesTable').DataTable().search();
+            var base = "{% url 'invoices_export' %}";
+            document.getElementById('downloadExcelLink').href =
+                value ? base + '?search=' + encodeURIComponent(value) : base;
+        });
+    });
+</script>
+{% endblock %}

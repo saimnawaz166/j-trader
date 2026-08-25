@@ -1,0 +1,455 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign in — J. Traders</title>
+    <link rel="icon" href="{% static 'favicon.ico' %}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+
+        :root {
+            --ink-950: #0a0f1c;
+            --ink-800: #131b2e;
+            --ink-700: #1c2740;
+            --paper: #fbfbfa;
+            --accent-blue: #3b82f6;
+            --accent-blue-hover: #2563eb;
+            --accent-amber: #f5a524;
+            --slate-300: #cbd5e1;
+            --slate-400: #94a3b8;
+            --slate-500: #64748b;
+            --slate-900: #0f172a;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background: var(--ink-950);
+            color: var(--slate-900);
+        }
+
+        a { color: inherit; }
+
+        button:focus-visible,
+        input:focus-visible,
+        a:focus-visible {
+            outline: 2px solid var(--accent-blue);
+            outline-offset: 2px;
+        }
+
+        .auth-shell {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* ---------- Left / dark manifest panel ---------- */
+
+        .auth-panel {
+            background:
+                radial-gradient(circle at 15% 15%, rgba(59,130,246,0.10), transparent 45%),
+                var(--ink-950);
+            color: var(--slate-300);
+            padding: 40px 32px 32px;
+            border-bottom: 1px solid var(--ink-700);
+        }
+
+        .panel-inner {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .brand-mark {
+            display: inline-block;
+            padding: 10px 16px;
+            background: #ffffff;
+            border-radius: 10px;
+        }
+
+        .brand-mark img {
+            display: block;
+            height: 40px;
+            width: auto;
+        }
+
+        .panel-headline {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 30px;
+            line-height: 1.12;
+            letter-spacing: -0.01em;
+            color: #f4f6fb;
+            margin: 22px 0 10px;
+        }
+
+        .panel-sub {
+            font-size: 15px;
+            line-height: 1.55;
+            color: var(--slate-400);
+            margin: 0 0 26px;
+            max-width: 40ch;
+        }
+
+        /* Barcode / manifest signature */
+
+        .barcode-wrap {
+            position: relative;
+            overflow: hidden;
+            height: 46px;
+            border-radius: 3px;
+            background: var(--ink-800);
+            border: 1px solid var(--ink-700);
+        }
+
+        .barcode {
+            position: absolute;
+            top: 8px;
+            right: 14px;
+            bottom: 8px;
+            left: 14px;
+            background-image: repeating-linear-gradient(
+                90deg,
+                rgba(251,251,250,0.92) 0px,   rgba(251,251,250,0.92) 2px,
+                transparent 2px,              transparent 5px,
+                rgba(251,251,250,0.92) 5px,   rgba(251,251,250,0.92) 6px,
+                transparent 6px,              transparent 10px,
+                rgba(251,251,250,0.92) 10px,  rgba(251,251,250,0.92) 13px,
+                transparent 13px,             transparent 15px,
+                rgba(251,251,250,0.92) 15px,  rgba(251,251,250,0.92) 16px,
+                transparent 16px,             transparent 20px,
+                rgba(251,251,250,0.92) 20px,  rgba(251,251,250,0.92) 23px,
+                transparent 23px,             transparent 24px,
+                rgba(251,251,250,0.92) 24px,  rgba(251,251,250,0.92) 25px,
+                transparent 25px,             transparent 29px,
+                rgba(251,251,250,0.92) 29px,  rgba(251,251,250,0.92) 31px,
+                transparent 31px,             transparent 35px,
+                rgba(251,251,250,0.92) 35px,  rgba(251,251,250,0.92) 36px,
+                transparent 36px,             transparent 38px,
+                rgba(251,251,250,0.92) 38px,  rgba(251,251,250,0.92) 41px,
+                transparent 41px,             transparent 44px,
+                rgba(251,251,250,0.92) 44px,  rgba(251,251,250,0.92) 45px,
+                transparent 45px,             transparent 50px,
+                rgba(251,251,250,0.92) 50px,  rgba(251,251,250,0.92) 53px,
+                transparent 53px,             transparent 54px,
+                rgba(251,251,250,0.92) 54px,  rgba(251,251,250,0.92) 55px,
+                transparent 55px,             transparent 59px,
+                rgba(251,251,250,0.92) 59px,  rgba(251,251,250,0.92) 61px,
+                transparent 61px,             transparent 65px
+            );
+        }
+
+        .scan-line {
+            position: absolute;
+            top: -20%;
+            bottom: -20%;
+            left: -3%;
+            width: 3px;
+            background: linear-gradient(180deg, transparent, var(--accent-amber) 25%, var(--accent-amber) 75%, transparent);
+            box-shadow: 0 0 10px 2px rgba(245,165,36,0.75);
+            animation: scan 3.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+        }
+
+        @keyframes scan {
+            0%   { left: -3%; }
+            50%  { left: 100%; }
+            100% { left: -3%; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .scan-line {
+                animation: none;
+                left: 45%;
+            }
+        }
+
+        .manifest-ref {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            color: var(--slate-500);
+            margin: 8px 2px 26px;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 12px;
+        }
+
+        .feature-list li {
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--slate-300);
+            padding-left: 18px;
+            position: relative;
+        }
+
+        .feature-list li::before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--accent-amber);
+        }
+
+        /* ---------- Right / form panel ---------- */
+
+        .auth-form {
+            background: var(--paper);
+            padding: 40px 28px 56px;
+            flex: 1;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .form-inner {
+            width: 100%;
+            max-width: 380px;
+            padding-top: 4px;
+        }
+
+        .form-inner h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 26px;
+            color: var(--slate-900);
+            margin: 0 0 6px;
+            letter-spacing: -0.01em;
+        }
+
+        .form-sub {
+            font-size: 14px;
+            color: var(--slate-500);
+            margin: 0 0 26px;
+        }
+
+        .alert {
+            font-size: 13.5px;
+            padding: 11px 14px;
+            border-radius: 6px;
+            margin-bottom: 18px;
+        }
+
+        .alert-success { background: #dcfce7; color: #166534; }
+        .alert-error   { background: #fee2e2; color: #991b1b; }
+        .alert-warning { background: #fef3c7; color: #92400e; }
+        .alert-info    { background: #dbeafe; color: #1e40af; }
+
+        .field {
+            display: block;
+            margin-bottom: 18px;
+        }
+
+        .field span {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--slate-500);
+            margin-bottom: 7px;
+        }
+
+        .field input {
+            width: 100%;
+            padding: 12px 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            color: var(--slate-900);
+            background: #ffffff;
+            border: 1px solid #dde3ec;
+            border-radius: 7px;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .field input::placeholder {
+            color: #b6bfcc;
+        }
+
+        .field input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.14);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 13px;
+            margin-top: 4px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 15px;
+            color: #ffffff;
+            background: var(--accent-blue);
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .btn-submit:hover {
+            background: var(--accent-blue-hover);
+        }
+
+        .form-foot {
+            font-size: 12.5px;
+            color: var(--slate-500);
+            margin-top: 22px;
+            line-height: 1.5;
+        }
+
+        /* ---------- Layout: split screen from tablet up ---------- */
+
+        @media (min-width: 900px) {
+
+            .auth-shell {
+                flex-direction: row;
+            }
+
+            .auth-panel {
+                width: 58%;
+                border-bottom: none;
+                border-right: 1px solid var(--ink-700);
+                padding: 64px 56px;
+                display: flex;
+                align-items: center;
+            }
+
+            .panel-inner {
+                margin: 0;
+                max-width: 480px;
+            }
+
+            .panel-headline {
+                font-size: 40px;
+                margin: 28px 0 12px;
+            }
+
+            .panel-sub {
+                font-size: 16px;
+                margin-bottom: 34px;
+            }
+
+            .auth-form {
+                width: 42%;
+                padding: 64px 56px;
+                align-items: center;
+            }
+
+            .form-inner h1 {
+                font-size: 30px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="auth-shell">
+
+        <section class="auth-panel">
+            <div class="panel-inner">
+
+                <span class="brand-mark">
+                    <img src="{% static 'img/logo.png' %}" alt="J. Traders">
+                </span>
+
+                <h2 class="panel-headline">Every unit,<br>accounted for.</h2>
+
+                <p class="panel-sub">
+                    Stock levels, suppliers, invoices and expenses —
+                    one system, no spreadsheets.
+                </p>
+
+                <div class="barcode-wrap">
+                    <div class="barcode"></div>
+                    <div class="scan-line"></div>
+                </div>
+
+                <div class="manifest-ref">MANIFEST&nbsp;NO.&nbsp;MFT-{% now "ymd" %}</div>
+
+                <ul class="feature-list">
+                    <li>Stock In and Stock Out, logged in one place</li>
+                    <li>Supplier and customer ledger in one place</li>
+                    <li>Invoices generated automatically for every movement</li>
+                </ul>
+
+            </div>
+        </section>
+
+        <section class="auth-form">
+            <div class="form-inner">
+
+                <h1>Welcome back</h1>
+                <p class="form-sub">Sign in to manage your inventory.</p>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="POST" action="{% url 'login' %}">
+
+                    {% csrf_token %}
+
+                    <input type="hidden" name="next" value="{{ next }}">
+
+                    <label class="field">
+                        <span>Username</span>
+                        <input
+                            type="text"
+                            name="username"
+                            required
+                            autofocus
+                            placeholder="Enter your username"
+                        >
+                    </label>
+
+                    <label class="field">
+                        <span>Password</span>
+                        <input
+                            type="password"
+                            name="password"
+                            required
+                            placeholder="Enter your password"
+                        >
+                    </label>
+
+                    <button type="submit" class="btn-submit">
+                        Sign In
+                    </button>
+
+                </form>
+
+                <p class="form-foot">
+                    Trouble signing in? Ask your system administrator
+                    to reset your password.
+                </p>
+
+            </div>
+        </section>
+
+    </div>
+
+</body>
+</html>

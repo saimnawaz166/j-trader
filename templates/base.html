@@ -1,0 +1,113 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}J. Traders{% endblock %}</title>
+    <link rel="icon" href="{% static 'favicon.ico' %}">
+   <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/datatables/dataTables.dataTables.min.css' %}">
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <img src="{% static 'img/logo.png' %}" alt="J. Traders">
+        </div>
+
+        <nav>
+            <a href="{% url 'dashboard' %}">Dashboard</a>
+            <a href="{% url 'stock_in_list' %}">
+    Stock In
+</a>
+            <a href="{% url 'stock_out_list' %}">
+    Stock Out
+</a>
+            <a href="{% url 'invoices' %}">Invoices</a>
+            <a href="{% url 'expense_list' %}">Expenses</a>
+            <a href="{% url 'reports_home' %}">Reports</a>
+            {% if request.user.is_superuser %}
+<a href="{% url 'user_list' %}">Settings</a>
+{% endif %}
+            <a href="{% url 'logout' %}" class="logout-link">Logout</a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <header class="topbar">
+            <div>
+                <h2>{% block page_title %}Inventory Management{% endblock %}</h2>
+            </div>
+
+            <div class="user-info">
+                Welcome, {{ request.user.username }}
+            </div>
+        </header>
+
+        <main class="content">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+
+    <script src="{% static 'vendor/jquery-3.7.1.min.js' %}"></script>
+    <script src="{% static 'vendor/datatables/dataTables.min.js' %}"></script>
+    <script>
+        $(function () {
+
+            // Server-side tables: columns and the AJAX source are read
+            // straight off the <th data-field="..."> markup, so a page
+            // only has to declare data-ajax="<url>" on the <table> and
+            // data-field="..." on each <th> - no per-page JS needed.
+            $('table.datatable[data-ajax]').each(function () {
+                var $table = $(this);
+
+                var columns = $table.find('thead th').map(function () {
+                    var $th = $(this);
+                    return {
+                        data: $th.data('field'),
+                        orderable: $th.data('orderable') !== false,
+                        searchable: $th.data('searchable') !== false
+                    };
+                }).get();
+
+                $table.DataTable({
+                    serverSide: true,
+                    processing: true,
+                    ajax: $table.data('ajax'),
+                    columns: columns,
+                    order: [],
+                    lengthMenu: [10, 25, 50, 100],
+                    language: {
+                        search: "Search:",
+                        emptyTable: "No records found.",
+                        processing: "Loading..."
+                    }
+                });
+            });
+
+            // Small, already-limited tables (e.g. a dashboard preview)
+            // stay plain client-side - no AJAX, no server-side paging.
+            $('table.datatable:not([data-ajax])').DataTable({
+                order: [],
+                lengthMenu: [10, 25, 50, 100],
+                language: {
+                    search: "Search:",
+                    emptyTable: "No records found."
+                }
+            });
+        });
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

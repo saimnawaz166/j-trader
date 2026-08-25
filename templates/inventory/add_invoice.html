@@ -1,0 +1,479 @@
+{% extends "base.html" %}
+
+{% block title %}New Invoice{% endblock %}
+
+{% block page_title %}New Invoice{% endblock %}
+
+{% block extra_head %}
+<style>
+
+.form-card h2 {
+    margin-top: 0;
+    margin-bottom: 25px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.section-header p {
+    color: #64748b;
+}
+
+.product-table {
+    overflow-x: auto;
+}
+
+.product-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.product-table th,
+.product-table td {
+    padding: 15px;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+}
+
+.btn-remove {
+    background: #ef4444;
+    color: white;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.payment-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 15px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-bottom: 40px;
+}
+
+@media(max-width: 900px) {
+
+    .form-grid,
+    .payment-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>Create Invoice</h1>
+        <p>Create a sales invoice</p>
+    </div>
+
+    <a href="{% url 'invoices' %}" class="btn btn-secondary">
+        Back
+    </a>
+</div>
+
+<form method="POST" id="invoiceForm">
+    {% csrf_token %}
+
+    <!-- Invoice Information -->
+    <div class="form-card">
+
+        <h2>Invoice Information</h2>
+
+        <div class="form-grid">
+
+            <div class="form-group">
+                <label>Invoice Number *</label>
+                <input
+                    type="text"
+                    name="invoice_number"
+                    placeholder="Example: INV-001"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label>Customer *</label>
+
+                <select name="customer" required>
+                    <option value="">Select Customer</option>
+
+                    {% for customer in customers %}
+                        <option value="{{ customer.id }}">
+                            {{ customer.name }}
+                        </option>
+                    {% endfor %}
+
+                </select>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Items -->
+    <div class="form-card">
+
+        <div class="section-header">
+
+            <div>
+                <h2>Items</h2>
+                <p>Add items to this invoice</p>
+            </div>
+
+            <button
+                type="button"
+                class="btn btn-primary"
+                onclick="addItemRow()"
+            >
+                + Add Item
+            </button>
+
+        </div>
+
+
+        <div class="product-table">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody id="itemRows">
+
+                    <tr class="item-row">
+
+                        <td>
+                            <input
+                                type="text"
+                                name="item_name"
+                                class="item-name"
+                                placeholder="Example: Steel Pipe 2 inch"
+                                required
+                            >
+                        </td>
+
+                        <td>
+                            <input
+                                type="number"
+                                name="quantity"
+                                class="quantity"
+                                value="1"
+                                min="1"
+                                onchange="calculateRow(this)"
+                                oninput="calculateRow(this)"
+                                required
+                            >
+                        </td>
+
+                        <td>
+                            <input
+                                type="number"
+                                name="price"
+                                class="price"
+                                step="0.01"
+                                min="0"
+                                value="0"
+                                onchange="calculateRow(this)"
+                                oninput="calculateRow(this)"
+                                required
+                            >
+                        </td>
+
+                        <td>
+                            <strong class="row-total">
+                                0.00
+                            </strong>
+                        </td>
+
+                        <td>
+                            <button
+                                type="button"
+                                class="btn-remove"
+                                onclick="removeRow(this)"
+                            >
+                                ×
+                            </button>
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- Payment -->
+    <div class="form-card">
+
+        <h2>Payment</h2>
+
+        <div class="payment-grid">
+
+            <div class="form-group">
+                <label>Subtotal</label>
+
+                <input
+                    type="text"
+                    id="subtotal"
+                    value="0.00"
+                    readonly
+                >
+            </div>
+
+            <div class="form-group">
+                <label>Discount</label>
+
+                <input
+                    type="number"
+                    name="discount"
+                    id="discount"
+                    value="0"
+                    min="0"
+                    step="0.01"
+                    oninput="calculateGrandTotal()"
+                >
+            </div>
+
+            <div class="form-group">
+                <label>Grand Total</label>
+
+                <input
+                    type="text"
+                    id="grandTotal"
+                    value="0.00"
+                    readonly
+                >
+            </div>
+
+            <div class="form-group">
+                <label>Paid Amount</label>
+
+                <input
+                    type="number"
+                    name="paid_amount"
+                    id="paidAmount"
+                    value="0"
+                    min="0"
+                    step="0.01"
+                    oninput="calculateRemaining()"
+                >
+            </div>
+
+            <div class="form-group">
+                <label>Remaining</label>
+
+                <input
+                    type="text"
+                    id="remainingAmount"
+                    value="0.00"
+                    readonly
+                >
+            </div>
+
+        </div>
+
+
+        <div class="form-group notes">
+
+            <label>Notes</label>
+
+            <textarea
+                name="notes"
+                rows="4"
+                placeholder="Optional notes..."
+            ></textarea>
+
+        </div>
+
+    </div>
+
+
+    <div class="form-actions">
+
+        <a
+            href="{% url 'invoices' %}"
+            class="btn btn-secondary"
+        >
+            Cancel
+        </a>
+
+        <button
+            type="button"
+            class="btn btn-primary"
+            onclick="window.print()"
+        >
+            Print Invoice
+        </button>
+
+        <button
+            type="submit"
+            class="btn btn-primary"
+        >
+            Save Invoice
+        </button>
+
+    </div>
+
+</form>
+
+
+<script>
+
+function calculateRow(element) {
+
+    const row = element.closest(".item-row");
+
+    const quantity =
+        parseFloat(row.querySelector(".quantity").value) || 0;
+
+    const price =
+        parseFloat(row.querySelector(".price").value) || 0;
+
+    const total = quantity * price;
+
+    row.querySelector(".row-total").textContent =
+        total.toFixed(2);
+
+    calculateSubtotal();
+}
+
+
+function calculateSubtotal() {
+
+    let subtotal = 0;
+
+    document.querySelectorAll(".item-row").forEach(row => {
+
+        const quantity =
+            parseFloat(row.querySelector(".quantity").value) || 0;
+
+        const price =
+            parseFloat(row.querySelector(".price").value) || 0;
+
+        subtotal += quantity * price;
+
+    });
+
+    document.getElementById("subtotal").value =
+        subtotal.toFixed(2);
+
+    calculateGrandTotal();
+}
+
+
+function calculateGrandTotal() {
+
+    const subtotal =
+        parseFloat(document.getElementById("subtotal").value) || 0;
+
+    const discount =
+        parseFloat(document.getElementById("discount").value) || 0;
+
+    let grandTotal = subtotal - discount;
+
+    if (grandTotal < 0) {
+        grandTotal = 0;
+    }
+
+    document.getElementById("grandTotal").value =
+        grandTotal.toFixed(2);
+
+    calculateRemaining();
+}
+
+
+function calculateRemaining() {
+
+    const grandTotal =
+        parseFloat(document.getElementById("grandTotal").value) || 0;
+
+    const paid =
+        parseFloat(document.getElementById("paidAmount").value) || 0;
+
+    let remaining = grandTotal - paid;
+
+    if (remaining < 0) {
+        remaining = 0;
+    }
+
+    document.getElementById("remainingAmount").value =
+        remaining.toFixed(2);
+}
+
+
+function addItemRow() {
+
+    const tbody =
+        document.getElementById("itemRows");
+
+    const firstRow =
+        document.querySelector(".item-row");
+
+    const newRow =
+        firstRow.cloneNode(true);
+
+    newRow.querySelector(".item-name").value = "";
+
+    newRow.querySelector(".quantity").value = 1;
+
+    newRow.querySelector(".price").value = 0;
+
+    newRow.querySelector(".row-total").textContent = "0.00";
+
+    tbody.appendChild(newRow);
+
+}
+
+
+function removeRow(button) {
+
+    const rows =
+        document.querySelectorAll(".item-row");
+
+    if (rows.length <= 1) {
+        return;
+    }
+
+    button.closest(".item-row").remove();
+
+    calculateSubtotal();
+
+}
+
+</script>
+
+{% endblock %}

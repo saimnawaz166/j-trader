@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block page_title %}Settings{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+
+    .usr-page {
+        --accent-blue: #3b82f6;
+        --accent-blue-dark: #2563eb;
+        --slate-400: #94a3b8;
+        --slate-500: #64748b;
+        --slate-600: #475569;
+        --slate-900: #0f172a;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .usr-eyebrow {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        color: var(--accent-blue-dark);
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+
+    .usr-page h1 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 32px;
+        letter-spacing: -0.01em;
+        color: var(--slate-900);
+        margin: 0 0 6px;
+    }
+
+    .usr-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 26px;
+    }
+
+    .usr-header-row p {
+        font-size: 15px;
+        color: var(--slate-500);
+        margin: 0;
+    }
+
+    .btn-add {
+        display: inline-block;
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        font-size: 14.5px;
+        color: #ffffff;
+        background: var(--accent-blue);
+        border: none;
+        border-radius: 8px;
+        padding: 12px 20px;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background 0.15s ease;
+    }
+
+    .btn-add:hover {
+        background: var(--accent-blue-dark);
+    }
+
+    .usr-table-container {
+        background: #ffffff;
+        border-radius: 12px;
+        overflow-x: auto;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .usr-table-container table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .usr-table-container th {
+        text-align: left;
+        font-size: 11.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--slate-500);
+        padding: 14px 20px;
+        border-bottom: 1px solid #eef1f6;
+        white-space: nowrap;
+    }
+
+    .usr-table-container td {
+        padding: 15px 20px;
+        font-size: 14.5px;
+        color: var(--slate-900);
+        border-bottom: 1px solid #f3f5f9;
+        vertical-align: middle;
+    }
+
+    .usr-table-container tr:last-child td {
+        border-bottom: none;
+    }
+
+    .usr-you-tag {
+        font-size: 11.5px;
+        font-weight: 600;
+        color: var(--accent-blue-dark);
+        margin-left: 6px;
+    }
+
+    .usr-last-login {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12.5px;
+        color: var(--slate-500);
+    }
+
+    .role-tag,
+    .status-tag {
+        display: inline-block;
+        font-size: 11.5px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 20px;
+        white-space: nowrap;
+    }
+
+    .role-admin { background: #fef3c7; color: #92400e; }
+    .role-staff { background: #dbeafe; color: #1e40af; }
+
+    .status-active   { background: #dcfce7; color: #166534; }
+    .status-inactive { background: #fee2e2; color: #991b1b; }
+
+    .usr-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .usr-actions form {
+        display: inline-flex;
+        margin: 0;
+    }
+
+    .usr-btn-edit,
+    .usr-btn-delete {
+        font-family: 'Inter', sans-serif;
+        font-size: 12.5px;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: 1px solid #dde3ec;
+        text-decoration: none;
+        cursor: pointer;
+        background: #ffffff;
+    }
+
+    .usr-btn-edit {
+        color: var(--slate-600);
+    }
+
+    .usr-btn-edit:hover {
+        border-color: var(--accent-blue);
+        color: var(--accent-blue-dark);
+    }
+
+    .usr-btn-delete {
+        color: #9f1239;
+    }
+
+    .usr-btn-delete:hover {
+        border-color: #f43f5e;
+        background: #fff1f2;
+    }
+
+    .usr-btn-disabled {
+        font-family: 'Inter', sans-serif;
+        font-size: 12.5px;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: 1px solid #eef1f6;
+        color: var(--slate-400);
+        background: #f8fafc;
+        cursor: default;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="usr-page">
+
+    <div class="usr-header-row">
+        <div>
+            <div class="usr-eyebrow">Access Control</div>
+            <h1>Settings</h1>
+            <p>Manage who can sign in to J. Traders.</p>
+        </div>
+
+        <a href="{% url 'user_create' %}" class="btn-add">
+            + Add User
+        </a>
+    </div>
+
+    <div class="usr-table-container">
+        <table class="datatable" data-ajax="{% url 'user_data' %}">
+            <thead>
+                <tr>
+                    <th data-field="username">Username</th>
+                    <th data-field="name" data-orderable="false">Name</th>
+                    <th data-field="role" data-orderable="false">Role</th>
+                    <th data-field="status" data-orderable="false">Status</th>
+                    <th data-field="last_login">Last Login</th>
+                    <th data-field="actions" data-orderable="false" data-searchable="false">Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}

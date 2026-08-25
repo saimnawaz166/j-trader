@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if account %}Edit User{% else %}Add User{% endif %}
+{% endblock %}
+
+{% block page_title %}
+    {% if account %}Edit User{% else %}Add User{% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+
+    .usr-form-page {
+        --accent-blue: #3b82f6;
+        --accent-blue-dark: #2563eb;
+        --slate-400: #94a3b8;
+        --slate-500: #64748b;
+        --slate-900: #0f172a;
+        font-family: 'Inter', Arial, sans-serif;
+        max-width: 560px;
+    }
+
+    .usr-form-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 22px;
+    }
+
+    .usr-form-page h1 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 26px;
+        color: var(--slate-900);
+        margin: 0;
+    }
+
+    .usr-back-link {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--slate-500);
+        text-decoration: none;
+        border: 1px solid #dde3ec;
+        padding: 9px 16px;
+        border-radius: 7px;
+    }
+
+    .usr-back-link:hover {
+        border-color: var(--accent-blue);
+        color: var(--accent-blue-dark);
+    }
+
+    .usr-form-card {
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 30px 32px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .usr-section-label {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--slate-900);
+        margin: 26px 0 14px;
+        padding-top: 20px;
+        border-top: 1px solid #eef1f6;
+    }
+
+    .usr-form-card form > .usr-section-label:first-of-type {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: none;
+    }
+
+    .usr-hint {
+        font-size: 12.5px;
+        color: var(--slate-400);
+        margin: -8px 0 16px;
+    }
+
+    .usr-field {
+        display: block;
+        margin-bottom: 20px;
+    }
+
+    .usr-field span {
+        display: block;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--slate-500);
+        margin-bottom: 7px;
+    }
+
+    .usr-field input {
+        width: 100%;
+        padding: 12px 14px;
+        font-family: 'Inter', sans-serif;
+        font-size: 15px;
+        color: var(--slate-900);
+        background: #ffffff;
+        border: 1px solid #dde3ec;
+        border-radius: 8px;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .usr-field input:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.14);
+    }
+
+    .usr-row-2 {
+        display: flex;
+        gap: 16px;
+    }
+
+    .usr-row-2 .usr-field {
+        flex: 1;
+        min-width: 0;
+    }
+
+    @media (max-width: 520px) {
+        .usr-row-2 {
+            flex-direction: column;
+        }
+    }
+
+    .usr-checkbox-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 16px;
+        padding: 14px 16px;
+        background: #f8fafc;
+        border-radius: 8px;
+    }
+
+    .usr-checkbox-row input[type="checkbox"] {
+        width: 17px;
+        height: 17px;
+        margin-top: 2px;
+        accent-color: var(--accent-blue);
+    }
+
+    .usr-checkbox-row label {
+        font-size: 14px;
+        color: var(--slate-900);
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .usr-checkbox-row p {
+        margin: 3px 0 0;
+        font-size: 12.5px;
+        color: var(--slate-500);
+        font-weight: 400;
+    }
+
+    .usr-submit {
+        width: 100%;
+        padding: 13px;
+        margin-top: 4px;
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        font-size: 15px;
+        color: #ffffff;
+        background: var(--accent-blue);
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.15s ease;
+    }
+
+    .usr-submit:hover {
+        background: var(--accent-blue-dark);
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="usr-form-page">
+
+    <div class="usr-form-header">
+        <h1>
+            {% if account %}
+                Edit User
+            {% else %}
+                Add User
+            {% endif %}
+        </h1>
+
+        <a href="{% url 'user_list' %}" class="usr-back-link">Back</a>
+    </div>
+
+    <div class="usr-form-card">
+
+        <form method="POST">
+
+            {% csrf_token %}
+
+            <div class="usr-section-label">Account Details</div>
+
+            <label class="usr-field">
+                <span>Username</span>
+                <input
+                    type="text"
+                    name="username"
+                    required
+                    value="{{ account.username|default:'' }}"
+                    placeholder="e.g. bilal"
+                >
+            </label>
+
+            <div class="usr-row-2">
+
+                <label class="usr-field">
+                    <span>First Name</span>
+                    <input
+                        type="text"
+                        name="first_name"
+                        value="{{ account.first_name|default:'' }}"
+                        placeholder="Optional"
+                    >
+                </label>
+
+                <label class="usr-field">
+                    <span>Last Name</span>
+                    <input
+                        type="text"
+                        name="last_name"
+                        value="{{ account.last_name|default:'' }}"
+                        placeholder="Optional"
+                    >
+                </label>
+
+            </div>
+
+            <div class="usr-section-label">
+                {% if account %}
+                    Reset Password
+                {% else %}
+                    Password
+                {% endif %}
+            </div>
+
+            {% if account %}
+                <p class="usr-hint">Leave blank to keep the current password.</p>
+            {% endif %}
+
+            <div class="usr-row-2">
+
+                <label class="usr-field">
+                    <span>{% if account %}New Password{% else %}Password{% endif %}</span>
+                    <input
+                        type="password"
+                        name="password"
+                        {% if not account %}required{% endif %}
+                        placeholder="{% if account %}Leave blank to keep current{% else %}At least 6 characters{% endif %}"
+                    >
+                </label>
+
+                <label class="usr-field">
+                    <span>Confirm Password</span>
+                    <input
+                        type="password"
+                        name="confirm_password"
+                        {% if not account %}required{% endif %}
+                        placeholder="Re-type password"
+                    >
+                </label>
+
+            </div>
+
+            <div class="usr-section-label">Access</div>
+
+            <div class="usr-checkbox-row">
+                <input
+                    type="checkbox"
+                    id="is_admin"
+                    name="is_admin"
+                    {% if account.is_superuser %}checked{% endif %}
+                >
+                <div>
+                    <label for="is_admin">Admin access</label>
+                    <p>Can manage users and change settings, in addition to normal access.</p>
+                </div>
+            </div>
+
+            {% if account %}
+            <div class="usr-checkbox-row">
+                <input
+                    type="checkbox"
+                    id="is_active"
+                    name="is_active"
+                    {% if account.is_active %}checked{% endif %}
+                >
+                <div>
+                    <label for="is_active">Active</label>
+                    <p>Uncheck to block this user from signing in, without deleting their account.</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <button type="submit" class="usr-submit">
+                {% if account %}
+                    Save Changes
+                {% else %}
+                    Create User
+                {% endif %}
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

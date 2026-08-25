@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Customers{% endblock %}
+
+{% block page_title %}Customers{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+        <h1>Customers</h1>
+        <p>Manage your customers</p>
+    </div>
+
+    <a
+        href="{% url 'customer_create' %}"
+        class="btn btn-primary">
+        + Add Customer
+    </a>
+
+</div>
+
+
+<div class="table-container">
+
+    <table class="datatable" data-ajax="{% url 'customer_data' %}">
+
+        <thead>
+
+            <tr>
+                <th data-field="name">Name</th>
+                <th data-field="phone">Phone</th>
+                <th data-field="email">Email</th>
+                <th data-field="address">Address</th>
+            </tr>
+
+        </thead>
+
+        <tbody></tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}
