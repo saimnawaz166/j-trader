@@ -190,6 +190,44 @@
         cursor: default;
     }
 
+    .usr-danger-zone {
+        margin-top: 26px;
+        padding: 20px 24px;
+        background: #fff1f2;
+        border: 1px solid #fecdd3;
+        border-radius: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .usr-danger-zone h3 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        color: #9f1239;
+        margin: 0 0 6px;
+    }
+
+    .usr-danger-zone p {
+        font-size: 13.5px;
+        color: #9f1239;
+        max-width: 520px;
+        margin: 0;
+    }
+
+    .usr-danger-zone form {
+        margin: 0;
+    }
+
+    .usr-danger-zone .usr-btn-delete {
+        padding: 10px 18px;
+        font-size: 13.5px;
+        background: #ffffff;
+    }
+
 </style>
 {% endblock %}
 
@@ -223,6 +261,28 @@
             </thead>
             <tbody></tbody>
         </table>
+    </div>
+
+    <div class="usr-danger-zone">
+        <div>
+            <h3>Danger Zone</h3>
+            <p>
+                Deletes every Stock In, Stock Out, Invoice, Supplier,
+                Customer and Expense record. Login accounts (like this
+                one) are never touched. This cannot be undone.
+            </p>
+        </div>
+
+        <form
+            method="POST"
+            action="{% url 'reset_data' %}"
+            onsubmit="return confirm('Delete ALL business data (Stock In/Out, Invoices, Suppliers, Customers, Expenses)? User accounts will be kept. This cannot be undone.');"
+        >
+            {% csrf_token %}
+            <button type="submit" class="usr-btn-delete">
+                Reset All Data
+            </button>
+        </form>
     </div>
 
 </div>

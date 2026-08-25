@@ -47,4 +47,10 @@ urlpatterns = [
         name="user_delete"
     ),
 
+    path(
+        "reset-data/",
+        views.reset_data,
+        name="reset_data"
+    ),
+
 ]

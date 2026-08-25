@@ -4,9 +4,11 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.db import transaction
 from django.middleware.csrf import get_token
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.views.decorators.http import require_POST
 
 from config.datatables import datatable_response
 
@@ -311,5 +313,35 @@ def user_delete(request, pk):
             request,
             f"User '{username}' deleted."
         )
+
+    return redirect("user_list")
+
+
+@login_required
+@admin_required
+@require_POST
+def reset_data(request):
+    """Wipe every business record (Stock In/Out, Invoices, Suppliers,
+    Customers, Expenses) - login accounts (Users) are never touched.
+
+    Superuser-only, POST-only (via the confirm button on Settings), so it
+    can't be triggered by simply visiting a URL.
+    """
+
+    from expenses.models import Expense
+    from inventory.models import Customer, Invoice, StockIn, StockOut, Supplier
+
+    with transaction.atomic():
+        StockIn.objects.all().delete()
+        StockOut.objects.all().delete()
+        Invoice.objects.all().delete()
+        Supplier.objects.all().delete()
+        Customer.objects.all().delete()
+        Expense.objects.all().delete()
+
+    messages.success(
+        request,
+        "All business data has been deleted. Login accounts were kept."
+    )
 
     return redirect("user_list")
