@@ -96,56 +96,73 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-# On Vercel the deployed project files are read-only (only /tmp is
-# writable), so the bundled db.sqlite3 can't be written to as-is. For a
-# demo/preview deployment, copy it into /tmp on cold start so the app is
-# at least usable - NOTE this is not persistent: every cold start (and
-# every separate serverless instance) gets its own fresh copy, so data
-# written here can disappear at any time. For real, permanent data, host
-# this on a platform with persistent storage instead (Railway, Render,
-# PythonAnywhere, a VPS, etc.).
-if os.environ.get('VERCEL'):
-    import shutil
+# If DATABASE_URL is set (a real, persistent Postgres database - e.g. a
+# free Neon or Supabase project), use it. This is what makes data survive
+# on Vercel: without it, every cold start gets a throwaway copy of the
+# bundled SQLite file (see the fallback below) and anything written
+# in one serverless instance can vanish the moment another one takes
+# over the next request.
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
-    _writable_db = Path('/tmp/db.sqlite3')
+if DATABASE_URL:
+    import dj_database_url
 
-    if not _writable_db.exists():
-        shutil.copy(BASE_DIR / 'db.sqlite3', _writable_db)
-
-    _db_path = _writable_db
-else:
-    _db_path = BASE_DIR / 'db.sqlite3'
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': _db_path,
-        # SQLite only allows one writer at a time. Without a busy timeout,
-        # a request that arrives while another write is still in flight
-        # (e.g. two tabs, or a request overlapping a session write) gets
-        # an immediate "database is locked" error instead of just
-        # waiting a moment for its turn.
-        'OPTIONS': {
-            'timeout': 20,
-        },
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True,
+        )
     }
-}
 
-# WAL mode lets SQLite handle concurrent reads/writes far more gracefully
-# than its default rollback-journal mode (fewer/shorter locks), which
-# matters here since Django's dev server handles requests on multiple
-# threads by default.
-from django.db.backends.signals import connection_created  # noqa: E402
+else:
+    # No persistent database configured - fall back to SQLite. On Vercel
+    # the deployed project files are read-only (only /tmp is writable),
+    # so the bundled db.sqlite3 can't be written to as-is; copying it into
+    # /tmp on cold start makes the app usable but NOT persistent - every
+    # cold start (and every separate serverless instance) gets its own
+    # fresh copy, so data written here can disappear at any time. Set
+    # DATABASE_URL (above) to fix this properly.
+    if os.environ.get('VERCEL'):
+        import shutil
 
+        _writable_db = Path('/tmp/db.sqlite3')
 
-def _enable_sqlite_wal(sender, connection, **kwargs):
-    if connection.vendor == 'sqlite':
-        with connection.cursor() as cursor:
-            cursor.execute('PRAGMA journal_mode=WAL;')
-            cursor.execute('PRAGMA busy_timeout=20000;')
+        if not _writable_db.exists():
+            shutil.copy(BASE_DIR / 'db.sqlite3', _writable_db)
 
+        _db_path = _writable_db
+    else:
+        _db_path = BASE_DIR / 'db.sqlite3'
 
-connection_created.connect(_enable_sqlite_wal)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': _db_path,
+            # SQLite only allows one writer at a time. Without a busy
+            # timeout, a request that arrives while another write is
+            # still in flight (e.g. two tabs, or a request overlapping a
+            # session write) gets an immediate "database is locked"
+            # error instead of just waiting a moment for its turn.
+            'OPTIONS': {
+                'timeout': 20,
+            },
+        }
+    }
+
+    # WAL mode lets SQLite handle concurrent reads/writes far more
+    # gracefully than its default rollback-journal mode (fewer/shorter
+    # locks), which matters since Django's dev server handles requests
+    # on multiple threads by default.
+    from django.db.backends.signals import connection_created  # noqa: E402
+
+    def _enable_sqlite_wal(sender, connection, **kwargs):
+        if connection.vendor == 'sqlite':
+            with connection.cursor() as cursor:
+                cursor.execute('PRAGMA journal_mode=WAL;')
+                cursor.execute('PRAGMA busy_timeout=20000;')
+
+    connection_created.connect(_enable_sqlite_wal)
 
 
 # Password validation
