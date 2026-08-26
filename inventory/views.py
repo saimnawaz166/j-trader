@@ -12,6 +12,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 
+from accounts.views import admin_required
 from config.datatables import datatable_response
 
 from .forms import (
@@ -379,15 +380,21 @@ def invoices_data(request):
 
     queryset = Invoice.objects.select_related("customer", "supplier").all()
 
+    can_edit = request.user.is_superuser
+
     def row(invoice):
         if invoice.invoice_type == Invoice.PURCHASE:
             type_html = '<span class="badge badge-purchase">Purchase</span>'
         else:
             type_html = '<span class="badge badge-sale">Sale</span>'
 
-        actions = (
+        edit_link = (
             f'<a href="{reverse("edit_invoice", args=[invoice.id])}" '
             f'class="btn btn-secondary">Edit</a> '
+        ) if can_edit else ""
+
+        actions = (
+            f'{edit_link}'
             f'<a href="{reverse("invoice_print", args=[invoice.id])}" '
             f'target="_blank" class="btn btn-secondary">Print</a>'
         )
@@ -487,6 +494,7 @@ def invoice_print(request, pk):
 
 
 @login_required
+@admin_required
 def edit_invoice(request, pk):
 
     invoice = get_object_or_404(

@@ -271,3 +271,66 @@ class ServerSideDataTablesTests(TestCase):
 
         # 30 purchase invoices (from Stock In) + 30 sale invoices (from Stock Out).
         self.assertEqual(payload["recordsTotal"], 60)
+
+
+class EditInvoicePermissionTests(TestCase):
+    """Only admins (superusers) may edit an invoice - staff can view and
+    print, but the Edit page/link is off-limits to them."""
+
+    def setUp(self):
+        User.objects.create_superuser("admin", password="pass12345")
+        User.objects.create_user("staff", password="pass12345")
+
+        customer = Customer.objects.create(name="Test Customer")
+        self.invoice = Invoice.objects.create(
+            invoice_number="INV0000001", invoice_type=Invoice.SALE,
+            customer=customer, date="2026-08-23",
+            subtotal="100.00", grand_total="100.00", remaining_amount="100.00",
+        )
+
+    def test_staff_cannot_open_edit_invoice_page(self):
+        self.client.login(username="staff", password="pass12345")
+
+        resp = self.client.get(f"/inventory/invoices/{self.invoice.pk}/edit/")
+
+        self.assertRedirects(resp, "/")
+
+    def test_staff_cannot_submit_edit_invoice(self):
+        self.client.login(username="staff", password="pass12345")
+
+        resp = self.client.post(f"/inventory/invoices/{self.invoice.pk}/edit/", {
+            "invoice_number": "HACKED0001", "party": "1",
+            "date": "2026-08-23", "discount": "0", "paid_amount": "0",
+        })
+
+        self.assertRedirects(resp, "/")
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.invoice_number, "INV0000001")
+
+    def test_admin_can_open_edit_invoice_page(self):
+        self.client.login(username="admin", password="pass12345")
+
+        resp = self.client.get(f"/inventory/invoices/{self.invoice.pk}/edit/")
+
+        self.assertEqual(resp.status_code, 200)
+
+    def test_edit_link_hidden_from_staff_in_invoices_list(self):
+        self.client.login(username="staff", password="pass12345")
+
+        resp = self.client.get(
+            "/inventory/invoices/data/?draw=1&start=0&length=10&search[value]="
+        )
+        payload = resp.json()
+
+        self.assertNotIn("Edit", payload["data"][0]["actions"])
+        self.assertIn("Print", payload["data"][0]["actions"])
+
+    def test_edit_link_shown_to_admin_in_invoices_list(self):
+        self.client.login(username="admin", password="pass12345")
+
+        resp = self.client.get(
+            "/inventory/invoices/data/?draw=1&start=0&length=10&search[value]="
+        )
+        payload = resp.json()
+
+        self.assertIn("Edit", payload["data"][0]["actions"])
