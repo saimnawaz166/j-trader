@@ -1,4 +1,4 @@
-# J. Traders
+# J. Gold Traders
 
 Django-based inventory management system: stock in/out, suppliers,
 customers, sales invoices, expenses, reports and a dashboard, behind

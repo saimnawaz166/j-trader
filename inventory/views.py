@@ -477,7 +477,7 @@ def invoice_print(request, pk):
     context = {
         "invoice": invoice,
         "items": items,
-        "business_name": "J. Traders",
+        "business_name": "J. Gold Traders",
         "business_address": "Your Business Address, City",
         "business_phone": "",
         "business_email": "",

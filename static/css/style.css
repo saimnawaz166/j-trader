@@ -24,9 +24,7 @@ body {
     display: flex;
     justify-content: center;
     margin: 0 15px 30px;
-    padding: 14px;
-    background: #ffffff;
-    border-radius: 12px;
+    padding: 10px;
 }
 
 .logo img {
