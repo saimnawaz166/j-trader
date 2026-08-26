@@ -1,2 +1,5 @@
 __pycache__/
 *.pyc
+.claude/
+db.sqlite3-wal
+db.sqlite3-shm

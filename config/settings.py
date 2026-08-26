@@ -120,8 +120,32 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': _db_path,
+        # SQLite only allows one writer at a time. Without a busy timeout,
+        # a request that arrives while another write is still in flight
+        # (e.g. two tabs, or a request overlapping a session write) gets
+        # an immediate "database is locked" error instead of just
+        # waiting a moment for its turn.
+        'OPTIONS': {
+            'timeout': 20,
+        },
     }
 }
+
+# WAL mode lets SQLite handle concurrent reads/writes far more gracefully
+# than its default rollback-journal mode (fewer/shorter locks), which
+# matters here since Django's dev server handles requests on multiple
+# threads by default.
+from django.db.backends.signals import connection_created  # noqa: E402
+
+
+def _enable_sqlite_wal(sender, connection, **kwargs):
+    if connection.vendor == 'sqlite':
+        with connection.cursor() as cursor:
+            cursor.execute('PRAGMA journal_mode=WAL;')
+            cursor.execute('PRAGMA busy_timeout=20000;')
+
+
+connection_created.connect(_enable_sqlite_wal)
 
 
 # Password validation

@@ -72,3 +72,57 @@ class ResetDataTests(TestCase):
         self.assertEqual(resp.status_code, 302)
         self.assertIn("/accounts/login/", resp.url)
         self.assertEqual(StockIn.objects.count(), 1)
+
+
+class RepeatedLoginLogoutTests(TestCase):
+    """Reproduce the reported bug: a staff account logs in fine several
+    times, then a later login attempt fails with 'Invalid username or
+    password' even though the credentials are unchanged."""
+
+    def setUp(self):
+        self.staff = User.objects.create_user(
+            "faizan", password="Staff@12345",
+            is_staff=False, is_superuser=False, is_active=True,
+        )
+
+    def test_login_logout_cycle_15_times_from_a_single_client(self):
+        for i in range(15):
+            resp = self.client.post("/accounts/login/", {
+                "username": "faizan", "password": "Staff@12345",
+            })
+            self.assertRedirects(
+                resp, "/", msg_prefix=f"login #{i + 1} failed unexpectedly"
+            )
+
+            resp = self.client.get("/accounts/logout/")
+            self.assertRedirects(resp, "/accounts/login/")
+
+    def test_login_logout_cycle_15_times_from_fresh_clients(self):
+        # A fresh Client() each time simulates closing/reopening the
+        # browser (no shared cookies) between attempts.
+        from django.test import Client
+
+        for i in range(15):
+            client = Client()
+            resp = client.post("/accounts/login/", {
+                "username": "faizan", "password": "Staff@12345",
+            })
+            self.assertRedirects(
+                resp, "/", msg_prefix=f"login #{i + 1} failed unexpectedly"
+            )
+
+        # The account itself must be untouched after 15 successful logins.
+        self.staff.refresh_from_db()
+        self.assertTrue(self.staff.is_active)
+        self.assertTrue(self.staff.check_password("Staff@12345"))
+
+    def test_password_hash_and_is_active_stable_across_many_logins(self):
+        original_password_hash = self.staff.password
+
+        for _ in range(20):
+            self.client.login(username="faizan", password="Staff@12345")
+            self.client.logout()
+
+        self.staff.refresh_from_db()
+        self.assertEqual(self.staff.password, original_password_hash)
+        self.assertTrue(self.staff.is_active)

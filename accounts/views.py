@@ -62,6 +62,26 @@ def login_view(request):
         username = form.cleaned_data["username"].strip()
         password = form.cleaned_data["password"]
 
+        # Django's ModelBackend already refuses to authenticate an
+        # inactive user (returns None), so that case has to be checked
+        # separately beforehand - otherwise a disabled account's owner
+        # sees "Invalid username or password" instead of the more useful
+        # "This account has been disabled" message.
+        existing_user = User.objects.filter(username=username).first()
+
+        if existing_user is not None and not existing_user.is_active:
+
+            messages.error(
+                request,
+                "This account has been disabled."
+            )
+
+            return render(
+                request,
+                "accounts/login.html",
+                {"next": next_url}
+            )
+
         user = authenticate(
             request,
             username=username,
@@ -73,19 +93,6 @@ def login_view(request):
             messages.error(
                 request,
                 "Invalid username or password."
-            )
-
-            return render(
-                request,
-                "accounts/login.html",
-                {"next": next_url}
-            )
-
-        if not user.is_active:
-
-            messages.error(
-                request,
-                "This account has been disabled."
             )
 
             return render(
