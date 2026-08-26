@@ -49,3 +49,16 @@ class DashboardViewTests(TestCase):
         response = self.client.get(reverse('dashboard'))
 
         self.assertNotContains(response, 'colspan')
+
+    def test_mobile_menu_toggle_present(self):
+        # The hamburger button + off-canvas sidebar toggle is what makes
+        # the layout usable on a phone-width screen.
+        User.objects.create_superuser('admin', password='pass12345')
+        self.client.login(username='admin', password='pass12345')
+
+        response = self.client.get(reverse('dashboard'))
+        body = response.content.decode()
+
+        self.assertIn('id="menuToggle"', body)
+        self.assertIn('id="sidebarOverlay"', body)
+        self.assertIn('name="viewport"', body)

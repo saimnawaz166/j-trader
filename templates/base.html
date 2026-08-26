@@ -12,7 +12,9 @@
 {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <div class="sidebar">
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="sidebar" id="sidebar">
         <div class="logo">
             <img src="{% static 'img/logo.png' %}" alt="J. Traders">
         </div>
@@ -37,6 +39,8 @@
 
     <div class="main-content">
         <header class="topbar">
+            <button type="button" class="menu-toggle" id="menuToggle" aria-label="Menu">&#9776;</button>
+
             <div>
                 <h2>{% block page_title %}Inventory Management{% endblock %}</h2>
             </div>
@@ -64,6 +68,18 @@
     <script src="{% static 'vendor/datatables/dataTables.min.js' %}"></script>
     <script>
         $(function () {
+
+            // Mobile: sidebar slides in/out as an overlay, toggled by the
+            // hamburger button in the topbar and closed by tapping outside.
+            $('#menuToggle').on('click', function () {
+                $('#sidebar').toggleClass('open');
+                $('#sidebarOverlay').toggleClass('open');
+            });
+
+            $('#sidebarOverlay').on('click', function () {
+                $('#sidebar').removeClass('open');
+                $('#sidebarOverlay').removeClass('open');
+            });
 
             // Server-side tables: columns and the AJAX source are read
             // straight off the <th data-field="..."> markup, so a page
