@@ -5,6 +5,37 @@ from expenses.models import Expense
 from inventory.models import Customer, Invoice, StockIn, StockOut, Supplier
 
 
+class UserAccountFormTests(TestCase):
+    """The Add/Edit User form no longer has a 'Confirm Password' field -
+    a single password field must be enough to create/update an account."""
+
+    def setUp(self):
+        User.objects.create_superuser("admin", password="pass12345")
+        self.client.login(username="admin", password="pass12345")
+
+    def test_create_user_without_confirm_password_field(self):
+        resp = self.client.post("/accounts/users/add/", {
+            "username": "newstaff", "first_name": "", "last_name": "",
+            "password": "SomePass123!",
+        })
+
+        self.assertRedirects(resp, "/accounts/users/")
+        user = User.objects.get(username="newstaff")
+        self.assertTrue(user.check_password("SomePass123!"))
+
+    def test_edit_user_password_without_confirm_password_field(self):
+        target = User.objects.create_user("editme", password="OldPass123!")
+
+        resp = self.client.post(f"/accounts/users/edit/{target.id}/", {
+            "username": "editme", "first_name": "", "last_name": "",
+            "password": "NewPass456!", "is_active": "on",
+        })
+
+        self.assertRedirects(resp, "/accounts/users/")
+        target.refresh_from_db()
+        self.assertTrue(target.check_password("NewPass456!"))
+
+
 class ResetDataTests(TestCase):
 
     def setUp(self):

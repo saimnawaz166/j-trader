@@ -255,29 +255,15 @@
                 <p class="usr-hint">Leave blank to keep the current password.</p>
             {% endif %}
 
-            <div class="usr-row-2">
-
-                <label class="usr-field">
-                    <span>{% if account %}New Password{% else %}Password{% endif %}</span>
-                    <input
-                        type="password"
-                        name="password"
-                        {% if not account %}required{% endif %}
-                        placeholder="{% if account %}Leave blank to keep current{% else %}At least 6 characters{% endif %}"
-                    >
-                </label>
-
-                <label class="usr-field">
-                    <span>Confirm Password</span>
-                    <input
-                        type="password"
-                        name="confirm_password"
-                        {% if not account %}required{% endif %}
-                        placeholder="Re-type password"
-                    >
-                </label>
-
-            </div>
+            <label class="usr-field">
+                <span>{% if account %}New Password{% else %}Password{% endif %}</span>
+                <input
+                    type="password"
+                    name="password"
+                    {% if not account %}required{% endif %}
+                    placeholder="{% if account %}Leave blank to keep current{% else %}At least 6 characters{% endif %}"
+                >
+            </label>
 
             <div class="usr-section-label">Access</div>
 

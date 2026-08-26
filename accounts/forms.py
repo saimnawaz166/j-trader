@@ -23,11 +23,6 @@ class UserAccountForm(forms.ModelForm):
         help_text="Leave blank to keep the current password.",
     )
 
-    confirm_password = forms.CharField(
-        widget=forms.PasswordInput,
-        required=False,
-    )
-
     is_admin = forms.BooleanField(
         required=False,
         label="Admin access",
@@ -42,7 +37,6 @@ class UserAccountForm(forms.ModelForm):
 
         # New accounts must set a password; existing accounts may leave it.
         self.fields["password"].required = not self.instance.pk
-        self.fields["confirm_password"].required = not self.instance.pk
 
         if self.instance.pk:
             self.fields["is_admin"].initial = self.instance.is_superuser
@@ -64,13 +58,8 @@ class UserAccountForm(forms.ModelForm):
         cleaned_data = super().clean()
 
         password = cleaned_data.get("password")
-        confirm_password = cleaned_data.get("confirm_password")
 
-        if password or confirm_password:
-
-            if password != confirm_password:
-                raise ValidationError("Passwords do not match.")
-
+        if password:
             try:
                 validate_password(password)
             except ValidationError as exc:
