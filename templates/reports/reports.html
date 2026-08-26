@@ -88,8 +88,15 @@
     }
 
     .pnl-value.positive,
-    .pnl-value.negative {
+    .pnl-value.negative,
+    .pnl-month strong.positive,
+    .pnl-month strong.negative {
         color: var(--slate-900) !important;
+    }
+
+    .pnl-month {
+        color: var(--slate-600) !important;
+        border-top-color: #cbd5e1 !important;
     }
 
     .pnl-formula {
@@ -156,6 +163,17 @@
     .pnl-formula .tag {
         color: var(--slate-400);
     }
+
+    .pnl-month {
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid #1c2740;
+        font-size: 13.5px;
+        color: var(--slate-400);
+    }
+
+    .pnl-month strong.positive { color: #6ee7b7; }
+    .pnl-month strong.negative { color: #fca5a5; }
 
     .rep-card {
         background: #ffffff;
@@ -336,20 +354,27 @@
 
     <div class="pnl-card">
 
-        <div class="pnl-label">This Month's Result</div>
+        <div class="pnl-label">All-Time Result</div>
 
         <div class="pnl-value {% if estimated_profit >= 0 %}positive{% else %}negative{% endif %}">
             {% if estimated_profit >= 0 %}+Rs {{ estimated_profit|floatformat:0 }}{% else %}&minus;Rs {{ estimated_profit|floatformat:0|cut:"-" }}{% endif %}
         </div>
 
         <div class="pnl-formula">
-            <span><span class="tag">Sales</span> Rs {{ monthly_sales.total|default:0|floatformat:0 }}</span>
+            <span><span class="tag">Sales</span> Rs {{ all_time_sales_total|floatformat:0 }}</span>
             <span class="op">&minus;</span>
-            <span><span class="tag">Purchases</span> Rs {{ monthly_purchases.total|default:0|floatformat:0 }}</span>
+            <span><span class="tag">Purchases</span> Rs {{ all_time_purchases_total|floatformat:0 }}</span>
             <span class="op">&minus;</span>
-            <span><span class="tag">Expenses</span> Rs {{ monthly_expenses_total|floatformat:0 }}</span>
+            <span><span class="tag">Expenses</span> Rs {{ all_time_expenses_total|floatformat:0 }}</span>
             <span class="op">=</span>
             <span><span class="tag">Result</span> Rs {{ estimated_profit|floatformat:0 }}</span>
+        </div>
+
+        <div class="pnl-month">
+            This month ({{ today|date:"F Y" }}):
+            <strong class="{% if monthly_profit >= 0 %}positive{% else %}negative{% endif %}">
+                {% if monthly_profit >= 0 %}+Rs {{ monthly_profit|floatformat:0 }}{% else %}&minus;Rs {{ monthly_profit|floatformat:0|cut:"-" }}{% endif %}
+            </strong>
         </div>
 
     </div>

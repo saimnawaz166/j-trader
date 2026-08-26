@@ -224,15 +224,19 @@
         </div>
 
         <div class="pnl">
-            <h3>This Month's Result</h3>
+            <h3>All-Time Result</h3>
             <div class="value">
                 {% if estimated_profit >= 0 %}+Rs {{ estimated_profit|floatformat:0 }}{% else %}&minus;Rs {{ estimated_profit|floatformat:0|cut:"-" }}{% endif %}
             </div>
             <div class="formula">
-                Sales Rs {{ monthly_sales.total|default:0|floatformat:0 }}
-                &minus; Purchases Rs {{ monthly_purchases.total|default:0|floatformat:0 }}
-                &minus; Expenses Rs {{ monthly_expenses_total|floatformat:0 }}
+                Sales Rs {{ all_time_sales_total|floatformat:0 }}
+                &minus; Purchases Rs {{ all_time_purchases_total|floatformat:0 }}
+                &minus; Expenses Rs {{ all_time_expenses_total|floatformat:0 }}
                 = Rs {{ estimated_profit|floatformat:0 }}
+            </div>
+            <div class="formula" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+                This month ({{ today|date:"F Y" }}):
+                {% if monthly_profit >= 0 %}+Rs {{ monthly_profit|floatformat:0 }}{% else %}&minus;Rs {{ monthly_profit|floatformat:0|cut:"-" }}{% endif %}
             </div>
         </div>
 

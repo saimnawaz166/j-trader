@@ -14,7 +14,29 @@ def _reports_context():
     today = timezone.localdate()
     month_start = today.replace(day=1)
 
-    # Sales & purchases (this month)
+    # All-time sales, purchases & expenses - the primary profit figure is
+    # based on these (not scoped to "this month"), so it never misses
+    # entries just because they were logged with an older/different date.
+
+    all_time_sales_total = StockOut.objects.aggregate(
+        total=Sum("total_amount")
+    )["total"] or 0
+
+    all_time_purchases_total = StockIn.objects.aggregate(
+        total=Sum("total_amount")
+    )["total"] or 0
+
+    all_time_expenses_total = Expense.objects.aggregate(
+        total=Sum("amount")
+    )["total"] or 0
+
+    estimated_profit = (
+        all_time_sales_total
+        - all_time_purchases_total
+        - all_time_expenses_total
+    )
+
+    # Sales & purchases (this month) - shown as a secondary breakdown.
 
     monthly_sales = StockOut.objects.filter(
         date__gte=month_start
@@ -30,6 +52,18 @@ def _reports_context():
         count=Count("id")
     )
 
+    monthly_expenses_total = Expense.objects.filter(
+        date__gte=month_start
+    ).aggregate(
+        total=Sum("amount")
+    )["total"] or 0
+
+    monthly_profit = (
+        (monthly_sales["total"] or 0)
+        - (monthly_purchases["total"] or 0)
+        - monthly_expenses_total
+    )
+
     # Invoices
 
     invoice_totals = Invoice.objects.aggregate(
@@ -39,13 +73,7 @@ def _reports_context():
         count=Count("id"),
     )
 
-    # Expenses (this month)
-
-    monthly_expenses_total = Expense.objects.filter(
-        date__gte=month_start
-    ).aggregate(
-        total=Sum("amount")
-    )["total"] or 0
+    # Expense breakdown (this month)
 
     expense_breakdown = Expense.objects.filter(
         date__gte=month_start
@@ -56,27 +84,19 @@ def _reports_context():
         default=0
     )
 
-    # Rough profit estimate for the month:
-    # sales revenue - cost of goods sold (approximated via purchase price)
-    # - expenses recorded this month
-
-    monthly_sales_total = monthly_sales["total"] or 0
-
-    estimated_profit = (
-        monthly_sales_total
-        - (monthly_purchases["total"] or 0)
-        - monthly_expenses_total
-    )
-
     return {
         "today": today,
+        "all_time_sales_total": all_time_sales_total,
+        "all_time_purchases_total": all_time_purchases_total,
+        "all_time_expenses_total": all_time_expenses_total,
+        "estimated_profit": estimated_profit,
         "monthly_sales": monthly_sales,
         "monthly_purchases": monthly_purchases,
-        "invoice_totals": invoice_totals,
         "monthly_expenses_total": monthly_expenses_total,
+        "monthly_profit": monthly_profit,
+        "invoice_totals": invoice_totals,
         "expense_breakdown": expense_breakdown,
         "max_expense_total": max_expense_total,
-        "estimated_profit": estimated_profit,
     }
 
 
