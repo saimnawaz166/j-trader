@@ -18,6 +18,17 @@ body {
     height: 100vh;
     background: #111827;
     padding: 25px 15px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.sidebar-credit {
+    margin-top: auto;
+    padding-top: 20px;
+    text-align: center;
+    font-size: 11.5px;
+    color: #64748b;
 }
 
 .logo {
