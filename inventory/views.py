@@ -504,9 +504,9 @@ def invoice_print(request, pk):
         "invoice": invoice,
         "items": items,
         "business_name": "J. Gold Traders",
-        "business_address": "Your Business Address, City",
-        "business_phone": "",
-        "business_email": "",
+        "business_address": "Lahore, Pakistan",
+        "business_phone": "0300-8442066 / 0313-9464166",
+        "business_email": "farhanarshad266@gmail.com",
     }
 
     return render(request, "inventory/invoice_print.html", context)
