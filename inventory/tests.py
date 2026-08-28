@@ -372,6 +372,49 @@ class PosCheckoutTests(TestCase):
         self.assertFalse(Invoice.objects.filter(invoice_type=Invoice.SALE).exists())
 
 
+class CustomerQuickAddTests(TestCase):
+    """The POS's "+ Add" button next to the customer dropdown must be
+    able to create a customer without a page navigation (which would
+    lose the in-progress cart) - a small JSON endpoint, not a redirect."""
+
+    def setUp(self):
+        User.objects.create_superuser("admin", password="pass12345")
+        self.client.login(username="admin", password="pass12345")
+
+    def test_quick_add_creates_customer_and_returns_json(self):
+        resp = self.client.post("/inventory/customers/quick-add/", {
+            "name": "Walk-in Buyer", "phone": "0300-1234567",
+        })
+
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertEqual(data["name"], "Walk-in Buyer")
+
+        customer = Customer.objects.get(pk=data["id"])
+        self.assertEqual(customer.phone, "0300-1234567")
+
+    def test_quick_add_requires_name(self):
+        resp = self.client.post("/inventory/customers/quick-add/", {
+            "name": "",
+        })
+
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("error", resp.json())
+        self.assertEqual(Customer.objects.count(), 0)
+
+    def test_quick_add_requires_post(self):
+        resp = self.client.get("/inventory/customers/quick-add/")
+
+        self.assertEqual(resp.status_code, 405)
+
+    def test_pos_page_has_add_customer_button_and_modal(self):
+        resp = self.client.get("/inventory/pos/")
+        body = resp.content.decode()
+
+        self.assertIn('id="posAddCustomerBtn"', body)
+        self.assertIn('id="addCustomerOverlay"', body)
+
+
 class EditInvoicePermissionTests(TestCase):
     """Only admins (superusers) may edit an invoice - staff can view and
     print, but the Edit page/link is off-limits to them."""

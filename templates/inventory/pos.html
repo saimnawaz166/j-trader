@@ -189,6 +189,59 @@
     padding-top: 10px;
 }
 
+.pos-customer-row {
+    display: flex;
+    gap: 8px;
+}
+
+.pos-customer-row select {
+    flex: 1;
+    min-width: 0;
+}
+
+.pos-customer-row .btn {
+    white-space: nowrap;
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.open {
+    display: flex;
+}
+
+.modal-box {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 26px;
+    width: 100%;
+    max-width: 380px;
+}
+
+.modal-box h3 {
+    margin: 0 0 16px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.field-error {
+    color: #dc2626;
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+
 </style>
 {% endblock %}
 
@@ -256,12 +309,17 @@
 
             <div class="form-group">
                 <label>Customer *</label>
-                <select name="customer" required>
-                    <option value="">Select Customer</option>
-                    {% for customer in customers %}
-                        <option value="{{ customer.id }}">{{ customer.name }}</option>
-                    {% endfor %}
-                </select>
+                <div class="pos-customer-row">
+                    <select name="customer" id="posCustomerSelect" required>
+                        <option value="">Select Customer</option>
+                        {% for customer in customers %}
+                            <option value="{{ customer.id }}">{{ customer.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" class="btn btn-secondary" id="posAddCustomerBtn">
+                        + Add
+                    </button>
+                </div>
             </div>
 
             <div class="pos-totals-row">
@@ -302,6 +360,36 @@
 
     </div>
 
+</div>
+
+<div class="modal-overlay" id="addCustomerOverlay">
+    <div class="modal-box">
+
+        <h3>Add Customer</h3>
+
+        <div id="addCustomerError" class="field-error" style="display: none;"></div>
+
+        <div class="form-group">
+            <label>Name *</label>
+            <input type="text" id="newCustomerName" placeholder="Customer name">
+        </div>
+
+        <div class="form-group">
+            <label>Phone</label>
+            <input type="text" id="newCustomerPhone" placeholder="Optional">
+        </div>
+
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="newCustomerEmail" placeholder="Optional">
+        </div>
+
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" id="addCustomerCancel">Cancel</button>
+            <button type="button" class="btn btn-primary" id="addCustomerSave">Save</button>
+        </div>
+
+    </div>
 </div>
 
 {% endblock %}
@@ -484,6 +572,79 @@
             var name = card.dataset.name.toLowerCase();
             card.style.display = name.indexOf(query) === -1 ? 'none' : '';
         });
+    });
+
+    // Quick "Add Customer" modal - lets the sale continue without
+    // navigating away (which would lose the cart being built).
+    var customerSelect = document.getElementById('posCustomerSelect');
+    var overlay = document.getElementById('addCustomerOverlay');
+    var errorBox = document.getElementById('addCustomerError');
+    var nameInput = document.getElementById('newCustomerName');
+    var phoneInput = document.getElementById('newCustomerPhone');
+    var emailInput = document.getElementById('newCustomerEmail');
+
+    function openCustomerModal() {
+        errorBox.style.display = 'none';
+        nameInput.value = '';
+        phoneInput.value = '';
+        emailInput.value = '';
+        overlay.classList.add('open');
+        nameInput.focus();
+    }
+
+    function closeCustomerModal() {
+        overlay.classList.remove('open');
+    }
+
+    document.getElementById('posAddCustomerBtn').addEventListener('click', openCustomerModal);
+    document.getElementById('addCustomerCancel').addEventListener('click', closeCustomerModal);
+
+    overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) {
+            closeCustomerModal();
+        }
+    });
+
+    document.getElementById('addCustomerSave').addEventListener('click', function () {
+        var name = nameInput.value.trim();
+
+        if (!name) {
+            errorBox.textContent = 'Customer name is required.';
+            errorBox.style.display = 'block';
+            return;
+        }
+
+        var csrfToken = document.querySelector('#posForm [name=csrfmiddlewaretoken]').value;
+        var body = new FormData();
+        body.append('name', name);
+        body.append('phone', phoneInput.value.trim());
+        body.append('email', emailInput.value.trim());
+
+        fetch('{% url "customer_quick_add" %}', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken },
+            body: body
+        })
+            .then(function (resp) { return resp.json().then(function (data) { return { ok: resp.ok, data: data }; }); })
+            .then(function (result) {
+                if (!result.ok) {
+                    errorBox.textContent = result.data.error || 'Could not add customer.';
+                    errorBox.style.display = 'block';
+                    return;
+                }
+
+                var option = document.createElement('option');
+                option.value = result.data.id;
+                option.textContent = result.data.name;
+                option.selected = true;
+                customerSelect.appendChild(option);
+
+                closeCustomerModal();
+            })
+            .catch(function () {
+                errorBox.textContent = 'Something went wrong. Please try again.';
+                errorBox.style.display = 'block';
+            });
     });
 
 })();

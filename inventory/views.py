@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -352,6 +352,23 @@ def customer_create(request):
         request,
         "inventory/customer_form.html"
     )
+
+
+@login_required
+def customer_quick_add(request):
+    """Add a customer without leaving the current page (e.g. from the
+    POS, where navigating away would lose the in-progress cart)."""
+
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required."}, status=405)
+
+    form = CustomerForm(request.POST)
+
+    if form.is_valid():
+        customer = form.save()
+        return JsonResponse({"id": customer.id, "name": customer.name})
+
+    return JsonResponse({"error": _first_form_error(form)}, status=400)
 
 
 def _invoices_queryset(request):

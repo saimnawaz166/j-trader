@@ -19,6 +19,7 @@ urlpatterns = [
     path("customers/", views.customer_list, name="customer_list"),
     path("customers/data/", views.customer_data, name="customer_data"),
     path("customers/add/", views.customer_create, name="customer_create"),
+    path("customers/quick-add/", views.customer_quick_add, name="customer_quick_add"),
 
     path("invoices/", views.invoices, name="invoices"),
     path("invoices/data/", views.invoices_data, name="invoices_data"),
