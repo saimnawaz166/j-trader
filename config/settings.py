@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'inventory',
     'expenses',
     'reports',
+    'products',
 ]
 
 MIDDLEWARE = [
@@ -204,10 +205,20 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
-# Media files (uploaded documents, KYC images, etc.)
+# Media files (product images, uploaded documents, etc.)
 
 MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+
+# On Vercel the project directory is read-only outside /tmp, so writing
+# an uploaded file straight to BASE_DIR/media would fail outright. Use
+# /tmp there instead so uploads at least succeed - NOTE this has the same
+# non-persistence caveat as the SQLite /tmp fallback above: it's wiped on
+# every cold start / separate serverless instance. For uploads that must
+# survive, use real object storage (e.g. Cloudinary, S3, R2) instead.
+if os.environ.get('VERCEL'):
+    MEDIA_ROOT = Path('/tmp/media')
+else:
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field

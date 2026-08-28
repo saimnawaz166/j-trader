@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Products{% endblock %}
+
+{% block page_title %}Products{% endblock %}
+
+{% block extra_head %}
+<style>
+
+.product-thumb {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 6px;
+    display: block;
+}
+
+.product-thumb-placeholder {
+    display: inline-block;
+    width: 44px;
+    height: 44px;
+    line-height: 44px;
+    text-align: center;
+    font-size: 10px;
+    color: #94a3b8;
+    background: #f1f5f9;
+    border-radius: 6px;
+}
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+        <h1>Products</h1>
+        <p>Product catalog - name, image and price</p>
+    </div>
+
+    <a
+        href="{% url 'product_create' %}"
+        class="btn btn-primary">
+        + Add Product
+    </a>
+
+</div>
+
+
+<div class="table-container">
+
+    <table class="datatable" data-ajax="{% url 'product_data' %}">
+
+        <thead>
+
+            <tr>
+                <th data-field="image" data-orderable="false" data-searchable="false">Image</th>
+                <th data-field="name">Name</th>
+                <th data-field="price">Price</th>
+                <th data-field="actions" data-orderable="false" data-searchable="false">Actions</th>
+            </tr>
+
+        </thead>
+
+        <tbody></tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

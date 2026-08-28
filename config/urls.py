@@ -60,6 +60,11 @@ urlpatterns = [
         "reports/",
         include("reports.urls")
     ),
+
+    path(
+        "products/",
+        include("products.urls")
+    ),
 ]
 
 if settings.DEBUG:
