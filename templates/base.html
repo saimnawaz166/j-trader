@@ -115,9 +115,11 @@
             });
 
             // Small, already-limited tables (e.g. a dashboard preview)
-            // stay plain client-side - no AJAX, no server-side paging.
+            // stay plain client-side - no AJAX, no server-side paging,
+            // and no sort-arrow icons cluttering the headers (nothing to
+            // sort - it's a fixed, already-ordered "top 5" preview).
             $('table.datatable:not([data-ajax])').DataTable({
-                order: [],
+                ordering: false,
                 lengthMenu: [10, 25, 50, 100],
                 language: {
                     search: "Search:",

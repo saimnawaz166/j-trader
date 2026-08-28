@@ -62,3 +62,14 @@ class DashboardViewTests(TestCase):
         self.assertIn('id="menuToggle"', body)
         self.assertIn('id="sidebarOverlay"', body)
         self.assertIn('name="viewport"', body)
+
+    def test_recent_invoices_table_has_sort_arrows_disabled(self):
+        # The Recent Invoices widget is a fixed "top 5" preview, not a
+        # browsable list - no point cluttering its headers with sort
+        # arrow icons for a table nobody re-sorts.
+        User.objects.create_superuser('admin', password='pass12345')
+        self.client.login(username='admin', password='pass12345')
+
+        response = self.client.get(reverse('dashboard'))
+
+        self.assertContains(response, "ordering: false")
