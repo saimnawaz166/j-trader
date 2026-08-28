@@ -5,6 +5,8 @@ from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.test import TestCase
 
+from products.models import Product
+
 from .models import Customer, Invoice, InvoiceItem, StockIn, StockOut, Supplier
 
 
@@ -271,6 +273,103 @@ class ServerSideDataTablesTests(TestCase):
 
         # 30 purchase invoices (from Stock In) + 30 sale invoices (from Stock Out).
         self.assertEqual(payload["recordsTotal"], 60)
+
+
+class PosCheckoutTests(TestCase):
+    """The POS is a separate way to make a sale, alongside Stock Out -
+    it must decrement Product stock, refuse to oversell, always price
+    from the server-side Product record (never trust the client), and
+    create a normal Sale invoice."""
+
+    def setUp(self):
+        User.objects.create_superuser("admin", password="pass12345")
+        self.client.login(username="admin", password="pass12345")
+        self.customer = Customer.objects.create(name="POS Customer")
+        self.product = Product.objects.create(
+            name="Steel Pipe", price="100.00", quantity=10,
+        )
+
+    def test_checkout_creates_invoice_and_decrements_stock(self):
+        resp = self.client.post("/inventory/pos/checkout/", {
+            "customer": self.customer.id,
+            "product_id": [str(self.product.id)],
+            "quantity": ["3"],
+            "discount": "0", "paid_amount": "300",
+        })
+
+        self.assertRedirects(resp, "/inventory/invoices/")
+
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.quantity, 7)
+
+        invoice = Invoice.objects.get(invoice_type=Invoice.SALE, customer=self.customer)
+        self.assertEqual(invoice.subtotal, 300)
+        self.assertEqual(invoice.grand_total, 300)
+        self.assertEqual(invoice.remaining_amount, 0)
+
+        item = InvoiceItem.objects.get(invoice=invoice)
+        self.assertEqual(item.item_name, "Steel Pipe")
+        self.assertEqual(item.quantity, 3)
+        self.assertEqual(item.unit_price, 100)
+
+    def test_checkout_refuses_to_oversell(self):
+        resp = self.client.post("/inventory/pos/checkout/", {
+            "customer": self.customer.id,
+            "product_id": [str(self.product.id)],
+            "quantity": ["99"],
+            "discount": "0", "paid_amount": "0",
+        }, follow=True)
+
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.quantity, 10)
+        self.assertFalse(Invoice.objects.filter(customer=self.customer).exists())
+        self.assertContains(resp, "Only 10")
+
+    def test_checkout_ignores_client_supplied_price(self):
+        # The POS form never even sends a price, but confirm the server
+        # can't be tricked by one either - it should be silently ignored.
+        resp = self.client.post("/inventory/pos/checkout/", {
+            "customer": self.customer.id,
+            "product_id": [str(self.product.id)],
+            "quantity": ["1"],
+            "price": ["1"],  # attempted tampering
+            "discount": "0", "paid_amount": "0",
+        })
+
+        self.assertRedirects(resp, "/inventory/invoices/")
+        item = InvoiceItem.objects.get(invoice__customer=self.customer)
+        self.assertEqual(item.unit_price, 100)  # real product price, not 1
+
+    def test_checkout_merges_duplicate_product_lines(self):
+        resp = self.client.post("/inventory/pos/checkout/", {
+            "customer": self.customer.id,
+            "product_id": [str(self.product.id), str(self.product.id)],
+            "quantity": ["2", "3"],
+            "discount": "0", "paid_amount": "0",
+        })
+
+        self.assertRedirects(resp, "/inventory/invoices/")
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.quantity, 5)  # 10 - (2+3)
+
+        item = InvoiceItem.objects.get(invoice__customer=self.customer)
+        self.assertEqual(item.quantity, 5)
+
+    def test_pos_page_renders(self):
+        resp = self.client.get("/inventory/pos/")
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Steel Pipe")
+        self.assertContains(resp, "POS Customer")
+
+    def test_checkout_requires_customer(self):
+        resp = self.client.post("/inventory/pos/checkout/", {
+            "product_id": [str(self.product.id)],
+            "quantity": ["1"],
+        }, follow=True)
+
+        self.assertContains(resp, "Select a customer")
+        self.assertFalse(Invoice.objects.filter(invoice_type=Invoice.SALE).exists())
 
 
 class EditInvoicePermissionTests(TestCase):

@@ -8,7 +8,7 @@ class ProductForm(forms.ModelForm):
 
     class Meta:
         model = Product
-        fields = ["name", "image", "price"]
+        fields = ["name", "image", "price", "quantity"]
 
     def clean_name(self):
         name = self.cleaned_data["name"].strip()

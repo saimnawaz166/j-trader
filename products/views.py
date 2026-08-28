@@ -47,17 +47,25 @@ def product_data(request):
             f'</form>'
         )
 
+        if product.quantity <= 0:
+            qty_html = '<span class="stock-badge stock-out">Out of stock</span>'
+        elif product.quantity <= 5:
+            qty_html = f'<span class="stock-badge stock-low">{product.quantity} left</span>'
+        else:
+            qty_html = str(product.quantity)
+
         return {
             "image": image_html,
             "name": f"<strong>{product.name}</strong>",
             "price": f"Rs {product.price:.2f}",
+            "quantity": qty_html,
             "actions": actions,
         }
 
     return datatable_response(
         request, queryset, row,
         search_fields=["name"],
-        order_fields=[None, "name", "price", None],
+        order_fields=[None, "name", "price", "quantity", None],
     )
 
 

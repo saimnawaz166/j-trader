@@ -26,6 +26,8 @@ from .forms import (
 from .models import Customer, Invoice, InvoiceItem, StockIn, StockOut, Supplier
 from .numbering import next_invoice_number
 
+from products.models import Product
+
 PURCHASE_PREFIX = "PUR"
 SALE_PREFIX = "INV"
 
@@ -661,3 +663,150 @@ def add_invoice(request):
         "inventory/add_invoice.html",
         context
     )
+
+
+@login_required
+def pos(request):
+
+    products = Product.objects.all()
+    customers = Customer.objects.all()
+
+    context = {
+        "products": products,
+        "customers": customers,
+    }
+
+    return render(
+        request,
+        "inventory/pos.html",
+        context
+    )
+
+
+@login_required
+def pos_checkout(request):
+
+    if request.method != "POST":
+        return redirect("pos")
+
+    customer_id = request.POST.get("customer")
+    discount = request.POST.get("discount") or "0"
+    paid_amount = request.POST.get("paid_amount") or "0"
+    notes = request.POST.get("notes", "")
+
+    product_ids = request.POST.getlist("product_id")
+    quantities = request.POST.getlist("quantity")
+
+    if not customer_id:
+        messages.error(request, "Select a customer.")
+        return redirect("pos")
+
+    if not product_ids:
+        messages.error(request, "Add at least one product to the cart.")
+        return redirect("pos")
+
+    try:
+        discount = Decimal(discount)
+        paid_amount = Decimal(paid_amount)
+    except InvalidOperation:
+        messages.error(request, "Invalid discount or paid amount.")
+        return redirect("pos")
+
+    if discount < 0 or paid_amount < 0:
+        messages.error(request, "Discount and paid amount can't be negative.")
+        return redirect("pos")
+
+    customer = get_object_or_404(Customer, pk=customer_id)
+
+    # Merge duplicate product entries (same product added more than once)
+    # into a single line, summing their quantities.
+    cart = {}
+
+    for product_id, quantity in zip(product_ids, quantities):
+
+        try:
+            product_id = int(product_id)
+            quantity = int(quantity)
+        except (ValueError, TypeError):
+            messages.error(request, "Invalid product or quantity in cart.")
+            return redirect("pos")
+
+        if quantity <= 0:
+            continue
+
+        cart[product_id] = cart.get(product_id, 0) + quantity
+
+    if not cart:
+        messages.error(request, "Add at least one product to the cart.")
+        return redirect("pos")
+
+    try:
+        with transaction.atomic():
+
+            subtotal = Decimal("0")
+            line_items = []
+
+            for product_id, quantity in cart.items():
+
+                # Lock the row so two simultaneous sales can't both
+                # oversell the same last few units.
+                product = Product.objects.select_for_update().get(pk=product_id)
+
+                if quantity > product.quantity:
+                    raise ValueError(
+                        f"Only {product.quantity} of '{product.name}' "
+                        f"left in stock."
+                    )
+
+                # Price always comes from the product record on the
+                # server, never trusted from the client - a manipulated
+                # POST can't sell at an arbitrary price.
+                line_total = product.price * quantity
+                subtotal += line_total
+
+                line_items.append({
+                    "product": product,
+                    "quantity": quantity,
+                    "price": product.price,
+                    "total": line_total,
+                })
+
+            grand_total = max(subtotal - discount, Decimal("0"))
+            remaining_amount = max(grand_total - paid_amount, Decimal("0"))
+
+            invoice = Invoice.objects.create(
+                invoice_number=next_invoice_number(SALE_PREFIX),
+                invoice_type=Invoice.SALE,
+                customer=customer,
+                date=timezone.localdate(),
+                subtotal=subtotal,
+                discount=discount,
+                grand_total=grand_total,
+                paid_amount=paid_amount,
+                remaining_amount=remaining_amount,
+                notes=notes,
+            )
+
+            for item in line_items:
+
+                InvoiceItem.objects.create(
+                    invoice=invoice,
+                    item_name=item["product"].name,
+                    quantity=item["quantity"],
+                    unit_price=item["price"],
+                    total=item["total"],
+                )
+
+                item["product"].quantity -= item["quantity"]
+                item["product"].save(update_fields=["quantity", "updated_at"])
+
+        messages.success(
+            request,
+            f"Sale completed. Invoice {invoice.invoice_number} created."
+        )
+
+        return redirect("invoices")
+
+    except ValueError as exc:
+        messages.error(request, str(exc))
+        return redirect("pos")

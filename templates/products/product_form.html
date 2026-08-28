@@ -78,6 +78,19 @@
 
         <div class="form-group">
 
+            <label>Stock Quantity *</label>
+
+            {{ form.quantity }}
+
+            {% if form.quantity.errors %}
+                <div class="field-error">{{ form.quantity.errors.0 }}</div>
+            {% endif %}
+
+        </div>
+
+
+        <div class="form-group">
+
             <label>Image</label>
 
             {% if product.image %}

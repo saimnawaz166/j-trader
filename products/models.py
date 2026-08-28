@@ -15,6 +15,11 @@ class Product(models.Model):
         decimal_places=2,
     )
 
+    quantity = models.PositiveIntegerField(
+        default=0,
+        help_text="Stock currently on hand. Decreases automatically as sales are made in the POS.",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

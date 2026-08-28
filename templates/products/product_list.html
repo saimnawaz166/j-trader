@@ -27,6 +27,24 @@
     border-radius: 6px;
 }
 
+.stock-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.stock-badge.stock-low {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.stock-badge.stock-out {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
 </style>
 {% endblock %}
 
@@ -58,6 +76,7 @@
                 <th data-field="image" data-orderable="false" data-searchable="false">Image</th>
                 <th data-field="name">Name</th>
                 <th data-field="price">Price</th>
+                <th data-field="quantity">Stock</th>
                 <th data-field="actions" data-orderable="false" data-searchable="false">Actions</th>
             </tr>
 

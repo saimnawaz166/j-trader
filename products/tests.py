@@ -38,17 +38,18 @@ class ProductCatalogTests(TestCase):
 
     def test_create_product_without_image(self):
         resp = self.client.post("/products/add/", {
-            "name": "Steel Pipe 2 inch", "price": "150.00",
+            "name": "Steel Pipe 2 inch", "price": "150.00", "quantity": "20",
         })
 
         self.assertRedirects(resp, "/products/")
         product = Product.objects.get(name="Steel Pipe 2 inch")
         self.assertEqual(product.price, 150)
+        self.assertEqual(product.quantity, 20)
         self.assertFalse(product.image)
 
     def test_create_product_with_image(self):
         resp = self.client.post("/products/add/", {
-            "name": "PVC Pipe 4 inch", "price": "220.00",
+            "name": "PVC Pipe 4 inch", "price": "220.00", "quantity": "5",
             "image": _tiny_image_file(),
         })
 
@@ -59,12 +60,12 @@ class ProductCatalogTests(TestCase):
 
     def test_edit_product_keeps_image_if_not_replaced(self):
         product = Product.objects.create(
-            name="Old Name", price="10.00", image=_tiny_image_file()
+            name="Old Name", price="10.00", quantity=3, image=_tiny_image_file()
         )
         original_image_name = product.image.name
 
         resp = self.client.post(f"/products/edit/{product.pk}/", {
-            "name": "New Name", "price": "20.00",
+            "name": "New Name", "price": "20.00", "quantity": "3",
         })
 
         self.assertRedirects(resp, "/products/")
@@ -73,7 +74,7 @@ class ProductCatalogTests(TestCase):
         self.assertEqual(product.image.name, original_image_name)
 
     def test_delete_product(self):
-        product = Product.objects.create(name="Gone Soon", price="5.00")
+        product = Product.objects.create(name="Gone Soon", price="5.00", quantity=1)
 
         resp = self.client.post(f"/products/delete/{product.pk}/")
 
@@ -82,14 +83,14 @@ class ProductCatalogTests(TestCase):
 
     def test_negative_price_rejected(self):
         resp = self.client.post("/products/add/", {
-            "name": "Bad Product", "price": "-5.00",
+            "name": "Bad Product", "price": "-5.00", "quantity": "1",
         })
 
         self.assertEqual(resp.status_code, 200)
         self.assertFalse(Product.objects.filter(name="Bad Product").exists())
 
     def test_product_list_and_data_endpoint(self):
-        Product.objects.create(name="Widget", price="99.99")
+        Product.objects.create(name="Widget", price="99.99", quantity=10)
 
         resp = self.client.get("/products/")
         self.assertEqual(resp.status_code, 200)

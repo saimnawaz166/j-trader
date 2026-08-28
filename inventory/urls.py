@@ -26,4 +26,7 @@ urlpatterns = [
     path("invoices/add/", views.add_invoice, name="add_invoice"),
     path("invoices/<int:pk>/edit/", views.edit_invoice, name="edit_invoice"),
     path("invoices/<int:pk>/print/", views.invoice_print, name="invoice_print"),
+
+    path("pos/", views.pos, name="pos"),
+    path("pos/checkout/", views.pos_checkout, name="pos_checkout"),
 ]
