@@ -325,8 +325,8 @@
                 <tr>
                     <td>{{ item.item_name }}</td>
                     <td class="num">{{ item.quantity }}</td>
-                    <td class="num">Rs {{ item.unit_price|floatformat:2 }}</td>
-                    <td class="num">Rs {{ item.total|floatformat:2 }}</td>
+                    <td class="num">Rs {{ item.unit_price|floatformat:0 }}</td>
+                    <td class="num">Rs {{ item.total|floatformat:0 }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -336,28 +336,28 @@
 
             <div class="row">
                 <span>Subtotal</span>
-                <span>Rs {{ invoice.subtotal|floatformat:2 }}</span>
+                <span>Rs {{ invoice.subtotal|floatformat:0 }}</span>
             </div>
 
             <div class="row">
                 <span>Discount</span>
-                <span>Rs {{ invoice.discount|floatformat:2 }}</span>
+                <span>Rs {{ invoice.discount|floatformat:0 }}</span>
             </div>
 
             <div class="row grand">
                 <span>Grand Total</span>
-                <span>Rs {{ invoice.grand_total|floatformat:2 }}</span>
+                <span>Rs {{ invoice.grand_total|floatformat:0 }}</span>
             </div>
 
             <div class="row">
                 <span>Paid</span>
-                <span>Rs {{ invoice.paid_amount|floatformat:2 }}</span>
+                <span>Rs {{ invoice.paid_amount|floatformat:0 }}</span>
             </div>
 
             {% if invoice.remaining_amount > 0 %}
             <div class="row due">
                 <span>Balance Due</span>
-                <span>Rs {{ invoice.remaining_amount|floatformat:2 }}</span>
+                <span>Rs {{ invoice.remaining_amount|floatformat:0 }}</span>
             </div>
             {% endif %}
 

@@ -100,6 +100,33 @@ class SmokeTestAllPagesAsAdmin(TestCase):
                 self.assertIn("recordsTotal", payload)
                 self.assertIn("data", payload)
 
+    def test_money_values_show_no_decimal_places(self):
+        # Amounts are shown as whole rupees everywhere (no "100.00") -
+        # spot-check the money-heavy list pages.
+        checks = {
+            "/products/data/": "price",
+            "/inventory/data/": "unit_cost",
+            "/inventory/stock-out/data/": "unit_price",
+            "/inventory/invoices/data/": "subtotal",
+        }
+
+        for url, field in checks.items():
+            with self.subTest(url=url):
+                resp = self.client.get(
+                    url + "?draw=1&start=0&length=10&search[value]="
+                )
+                payload = resp.json()
+                for row in payload["data"]:
+                    self.assertNotIn(
+                        ".", row[field],
+                        f"{url} field '{field}' still shows a decimal: {row[field]!r}"
+                    )
+
+    def test_invoice_print_shows_no_decimal_places(self):
+        resp = self.client.get(f"/inventory/invoices/{self.invoice.pk}/print/")
+        self.assertNotContains(resp, "160.00")
+        self.assertContains(resp, "Rs 160")
+
 
 class SmokeTestPagesAsStaff(TestCase):
     """A non-admin (staff) user should be able to use the app day-to-day,

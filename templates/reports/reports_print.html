@@ -245,9 +245,9 @@
 
             {% if invoice_totals.revenue %}
                 <div class="row"><span>Total invoices</span><span>{{ invoice_totals.count|default:0 }}</span></div>
-                <div class="row"><span>Total billed</span><span>Rs {{ invoice_totals.revenue|floatformat:2 }}</span></div>
-                <div class="row"><span>Collected</span><span>Rs {{ invoice_totals.collected|default:0|floatformat:2 }}</span></div>
-                <div class="row total"><span>Pending</span><span>Rs {{ invoice_totals.pending|default:0|floatformat:2 }}</span></div>
+                <div class="row"><span>Total billed</span><span>Rs {{ invoice_totals.revenue|floatformat:0 }}</span></div>
+                <div class="row"><span>Collected</span><span>Rs {{ invoice_totals.collected|default:0|floatformat:0 }}</span></div>
+                <div class="row total"><span>Pending</span><span>Rs {{ invoice_totals.pending|default:0|floatformat:0 }}</span></div>
             {% else %}
                 <p class="empty">No invoices yet.</p>
             {% endif %}
@@ -258,9 +258,9 @@
 
             {% if expense_breakdown %}
                 {% for row in expense_breakdown %}
-                <div class="row"><span>{{ row.label }}</span><span>Rs {{ row.total|floatformat:2 }}</span></div>
+                <div class="row"><span>{{ row.label }}</span><span>Rs {{ row.total|floatformat:0 }}</span></div>
                 {% endfor %}
-                <div class="row total"><span>Total</span><span>Rs {{ monthly_expenses_total|floatformat:2 }}</span></div>
+                <div class="row total"><span>Total</span><span>Rs {{ monthly_expenses_total|floatformat:0 }}</span></div>
             {% else %}
                 <p class="empty">No expenses recorded this month.</p>
             {% endif %}

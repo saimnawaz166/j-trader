@@ -278,7 +278,7 @@
                 {% endif %}
 
                 <div class="pos-card-name">{{ product.name }}</div>
-                <div class="pos-card-price">Rs {{ product.price|floatformat:2 }}</div>
+                <div class="pos-card-price">Rs {{ product.price|floatformat:0 }}</div>
                 <div class="pos-card-stock">
                     {% if product.quantity <= 0 %}
                         Out of stock
@@ -411,7 +411,7 @@
     var submitBtn = document.getElementById('posSubmit');
 
     function money(n) {
-        return 'Rs ' + n.toFixed(2);
+        return 'Rs ' + n.toFixed(0);
     }
 
     function addToCart(card) {

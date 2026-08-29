@@ -100,8 +100,8 @@
                     <tr>
                         <td>{{ item.item_name }}</td>
                         <td>{{ item.quantity }}</td>
-                        <td>Rs {{ item.unit_price|floatformat:2 }}</td>
-                        <td><strong>Rs {{ item.total|floatformat:2 }}</strong></td>
+                        <td>Rs {{ item.unit_price|floatformat:0 }}</td>
+                        <td><strong>Rs {{ item.total|floatformat:0 }}</strong></td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -125,7 +125,7 @@
                 <input
                     type="text"
                     id="subtotal"
-                    value="{{ invoice.subtotal|floatformat:2 }}"
+                    value="{{ invoice.subtotal|floatformat:0 }}"
                     readonly
                 >
             </div>
@@ -136,7 +136,7 @@
                     type="number"
                     name="discount"
                     id="discount"
-                    value="{{ invoice.discount|floatformat:2 }}"
+                    value="{{ invoice.discount|floatformat:0 }}"
                     min="0"
                     step="0.01"
                     oninput="calculateGrandTotal()"
@@ -148,7 +148,7 @@
                 <input
                     type="text"
                     id="grandTotal"
-                    value="{{ invoice.grand_total|floatformat:2 }}"
+                    value="{{ invoice.grand_total|floatformat:0 }}"
                     readonly
                 >
             </div>
@@ -159,7 +159,7 @@
                     type="number"
                     name="paid_amount"
                     id="paidAmount"
-                    value="{{ invoice.paid_amount|floatformat:2 }}"
+                    value="{{ invoice.paid_amount|floatformat:0 }}"
                     min="0"
                     step="0.01"
                     oninput="calculateRemaining()"
@@ -171,7 +171,7 @@
                 <input
                     type="text"
                     id="remainingAmount"
-                    value="{{ invoice.remaining_amount|floatformat:2 }}"
+                    value="{{ invoice.remaining_amount|floatformat:0 }}"
                     readonly
                 >
             </div>
@@ -358,7 +358,7 @@ function calculateGrandTotal() {
     }
 
     document.getElementById("grandTotal").value =
-        grandTotal.toFixed(2);
+        grandTotal.toFixed(0);
 
     calculateRemaining();
 }
@@ -379,7 +379,7 @@ function calculateRemaining() {
     }
 
     document.getElementById("remainingAmount").value =
-        remaining.toFixed(2);
+        remaining.toFixed(0);
 }
 
 
@@ -388,7 +388,7 @@ function markFullyPaid() {
     const grandTotal =
         parseFloat(document.getElementById("grandTotal").value) || 0;
 
-    document.getElementById("paidAmount").value = grandTotal.toFixed(2);
+    document.getElementById("paidAmount").value = grandTotal.toFixed(0);
 
     calculateRemaining();
 }

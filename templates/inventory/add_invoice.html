@@ -211,7 +211,7 @@
 
                         <td>
                             <strong class="row-total">
-                                0.00
+                                0
                             </strong>
                         </td>
 
@@ -249,7 +249,7 @@
                 <input
                     type="text"
                     id="subtotal"
-                    value="0.00"
+                    value="0"
                     readonly
                 >
             </div>
@@ -274,7 +274,7 @@
                 <input
                     type="text"
                     id="grandTotal"
-                    value="0.00"
+                    value="0"
                     readonly
                 >
             </div>
@@ -299,7 +299,7 @@
                 <input
                     type="text"
                     id="remainingAmount"
-                    value="0.00"
+                    value="0"
                     readonly
                 >
             </div>
@@ -366,7 +366,7 @@ function calculateRow(element) {
     const total = quantity * price;
 
     row.querySelector(".row-total").textContent =
-        total.toFixed(2);
+        total.toFixed(0);
 
     calculateSubtotal();
 }
@@ -389,7 +389,7 @@ function calculateSubtotal() {
     });
 
     document.getElementById("subtotal").value =
-        subtotal.toFixed(2);
+        subtotal.toFixed(0);
 
     calculateGrandTotal();
 }
@@ -410,7 +410,7 @@ function calculateGrandTotal() {
     }
 
     document.getElementById("grandTotal").value =
-        grandTotal.toFixed(2);
+        grandTotal.toFixed(0);
 
     calculateRemaining();
 }
@@ -431,7 +431,7 @@ function calculateRemaining() {
     }
 
     document.getElementById("remainingAmount").value =
-        remaining.toFixed(2);
+        remaining.toFixed(0);
 }
 
 
@@ -452,7 +452,7 @@ function addItemRow() {
 
     newRow.querySelector(".price").value = 0;
 
-    newRow.querySelector(".row-total").textContent = "0.00";
+    newRow.querySelector(".row-total").textContent = "0";
 
     tbody.appendChild(newRow);
 

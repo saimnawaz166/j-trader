@@ -90,7 +90,7 @@ class ProductCatalogTests(TestCase):
         self.assertFalse(Product.objects.filter(name="Bad Product").exists())
 
     def test_product_list_and_data_endpoint(self):
-        Product.objects.create(name="Widget", price="99.99", quantity=10)
+        Product.objects.create(name="Widget", price="99.00", quantity=10)
 
         resp = self.client.get("/products/")
         self.assertEqual(resp.status_code, 200)
@@ -102,4 +102,6 @@ class ProductCatalogTests(TestCase):
         payload = resp.json()
         self.assertEqual(payload["recordsTotal"], 1)
         self.assertIn("Widget", payload["data"][0]["name"])
-        self.assertIn("99.99", payload["data"][0]["price"])
+        # Prices display without decimal places project-wide.
+        self.assertIn("Rs 99", payload["data"][0]["price"])
+        self.assertNotIn(".", payload["data"][0]["price"])

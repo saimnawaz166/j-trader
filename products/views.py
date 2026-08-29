@@ -57,7 +57,7 @@ def product_data(request):
         return {
             "image": image_html,
             "name": f"<strong>{product.name}</strong>",
-            "price": f"Rs {product.price:.2f}",
+            "price": f"Rs {product.price:.0f}",
             "quantity": qty_html,
             "actions": actions,
         }

@@ -73,8 +73,8 @@ def stock_in_data(request):
             "supplier": stock_in.supplier.name,
             "item_name": stock_in.item_name,
             "quantity": stock_in.quantity,
-            "unit_cost": str(stock_in.unit_cost),
-            "total_amount": f"<strong>{stock_in.total_amount}</strong>",
+            "unit_cost": f"{stock_in.unit_cost:.0f}",
+            "total_amount": f"<strong>{stock_in.total_amount:.0f}</strong>",
             "actions": _print_invoice_button(stock_in.invoice_number),
         }
 
@@ -222,8 +222,8 @@ def stock_out_data(request):
             "customer": stock_out.customer.name,
             "item_name": stock_out.item_name,
             "quantity": stock_out.quantity,
-            "unit_price": str(stock_out.unit_price),
-            "total_amount": f"<strong>{stock_out.total_amount}</strong>",
+            "unit_price": f"{stock_out.unit_price:.0f}",
+            "total_amount": f"<strong>{stock_out.total_amount:.0f}</strong>",
             "actions": _print_invoice_button(stock_out.invoice_number),
         }
 
@@ -423,11 +423,11 @@ def invoices_data(request):
             "invoice_type": type_html,
             "date": invoice.date.strftime("%b %d, %Y"),
             "party": invoice.party.name if invoice.party else "",
-            "subtotal": f"{invoice.subtotal:.2f}",
-            "discount": f"{invoice.discount:.2f}",
-            "grand_total": f"<strong>{invoice.grand_total:.2f}</strong>",
-            "paid_amount": f"{invoice.paid_amount:.2f}",
-            "remaining_amount": f"{invoice.remaining_amount:.2f}",
+            "subtotal": f"{invoice.subtotal:.0f}",
+            "discount": f"{invoice.discount:.0f}",
+            "grand_total": f"<strong>{invoice.grand_total:.0f}</strong>",
+            "paid_amount": f"{invoice.paid_amount:.0f}",
+            "remaining_amount": f"{invoice.remaining_amount:.0f}",
             "actions": actions,
         }
 

@@ -323,7 +323,7 @@
                     <td>{{ expense.title }}</td>
                     <td>{{ expense.get_category_display }}</td>
                     <td>{{ expense.date|date:"d M Y" }}</td>
-                    <td class="num">Rs {{ expense.amount|floatformat:2 }}</td>
+                    <td class="num">Rs {{ expense.amount|floatformat:0 }}</td>
                 </tr>
                 {% empty %}
                 <tr>
@@ -336,7 +336,7 @@
         <div class="totals">
             <div class="row grand">
                 <span>Total</span>
-                <span>Rs {{ total|floatformat:2 }}</span>
+                <span>Rs {{ total|floatformat:0 }}</span>
             </div>
         </div>
 
