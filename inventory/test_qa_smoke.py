@@ -127,6 +127,13 @@ class SmokeTestAllPagesAsAdmin(TestCase):
         self.assertNotContains(resp, "160.00")
         self.assertContains(resp, "Rs 160")
 
+    def test_price_fields_have_no_spinner_class_and_wheel_guard(self):
+        # Price/Discount/Amount inputs must carry the no-spinner class,
+        # and the shared base template must wire up the wheel-blur guard.
+        resp = self.client.get("/inventory/pos/")
+        self.assertIn('class="no-spinner"', resp.content.decode())
+        self.assertIn("input.no-spinner", resp.content.decode())
+
 
 class SmokeTestPagesAsStaff(TestCase):
     """A non-admin (staff) user should be able to use the app day-to-day,

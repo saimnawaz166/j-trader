@@ -85,6 +85,14 @@
                 $('#sidebarOverlay').removeClass('open');
             });
 
+            // Price/Discount/Amount fields: a mouse wheel scroll while the
+            // field happens to be focused would otherwise silently bump
+            // the value up/down. Blur it on wheel so scrolling just
+            // scrolls the page instead, like it does everywhere else.
+            $(document).on('wheel', 'input.no-spinner', function () {
+                $(this).trigger('blur');
+            });
+
             // Server-side tables: columns and the AJAX source are read
             // straight off the <th data-field="..."> markup, so a page
             // only has to declare data-ajax="<url>" on the <table> and
