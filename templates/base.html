@@ -98,6 +98,16 @@
                 }
             );
 
+            // Price/Discount/Amount fields: the Up/Down arrow keys
+            // normally step a number input's value too - block just
+            // those two keys there (Quantity fields are unaffected and
+            // still step normally with the keyboard).
+            $(document).on('keydown', 'input.no-spinner', function (e) {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                }
+            });
+
             // Server-side tables: columns and the AJAX source are read
             // straight off the <th data-field="..."> markup, so a page
             // only has to declare data-ajax="<url>" on the <table> and

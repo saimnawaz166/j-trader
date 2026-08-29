@@ -134,6 +134,14 @@ class SmokeTestAllPagesAsAdmin(TestCase):
         self.assertIn('class="no-spinner"', resp.content.decode())
         self.assertIn("input.no-spinner", resp.content.decode())
 
+    def test_price_fields_block_arrow_key_stepping(self):
+        # The base template must also block ArrowUp/ArrowDown on
+        # Price/Discount/Amount fields (Quantity fields still step).
+        body = self.client.get("/").content.decode()
+        self.assertIn("ArrowUp", body)
+        self.assertIn("ArrowDown", body)
+        self.assertIn("keydown", body)
+
     def test_quantity_fields_have_wheel_guard(self):
         # Quantity inputs (Stock In/Out) keep their spinner arrows but
         # must still be covered by the wheel-blur guard.
