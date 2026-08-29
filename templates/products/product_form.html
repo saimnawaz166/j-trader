@@ -7,15 +7,6 @@
 {% block extra_head %}
 <style>
 
-.current-image {
-    width: 120px;
-    height: 120px;
-    object-fit: cover;
-    border-radius: 8px;
-    display: block;
-    margin-bottom: 12px;
-}
-
 .field-error {
     color: #dc2626;
     font-size: 13px;
@@ -45,7 +36,7 @@
 
 <div class="form-card">
 
-    <form method="POST" enctype="multipart/form-data">
+    <form method="POST">
 
         {% csrf_token %}
 
@@ -84,23 +75,6 @@
 
             {% if form.quantity.errors %}
                 <div class="field-error">{{ form.quantity.errors.0 }}</div>
-            {% endif %}
-
-        </div>
-
-
-        <div class="form-group">
-
-            <label>Image</label>
-
-            {% if product.image %}
-                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="current-image">
-            {% endif %}
-
-            {{ form.image }}
-
-            {% if form.image.errors %}
-                <div class="field-error">{{ form.image.errors.0 }}</div>
             {% endif %}
 
         </div>

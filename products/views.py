@@ -28,14 +28,6 @@ def product_data(request):
     csrf_token = get_token(request)
 
     def row(product):
-        if product.image:
-            image_html = (
-                f'<img src="{product.image.url}" alt="{product.name}" '
-                f'class="product-thumb">'
-            )
-        else:
-            image_html = '<span class="product-thumb-placeholder">No image</span>'
-
         delete_url = reverse("product_delete", args=[product.id])
         actions = (
             f'<a href="{reverse("product_edit", args=[product.id])}" '
@@ -55,7 +47,6 @@ def product_data(request):
             qty_html = str(product.quantity)
 
         return {
-            "image": image_html,
             "name": f"<strong>{product.name}</strong>",
             "price": f"Rs {product.price:.0f}",
             "quantity": qty_html,
@@ -65,7 +56,7 @@ def product_data(request):
     return datatable_response(
         request, queryset, row,
         search_fields=["name"],
-        order_fields=[None, "name", "price", "quantity", None],
+        order_fields=["name", "price", "quantity", None],
     )
 
 
@@ -74,7 +65,7 @@ def product_create(request):
 
     if request.method == "POST":
 
-        form = ProductForm(request.POST, request.FILES)
+        form = ProductForm(request.POST)
 
         if form.is_valid():
 
@@ -106,7 +97,7 @@ def product_edit(request, pk):
 
     if request.method == "POST":
 
-        form = ProductForm(request.POST, request.FILES, instance=product)
+        form = ProductForm(request.POST, instance=product)
 
         if form.is_valid():
 

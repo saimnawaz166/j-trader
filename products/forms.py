@@ -8,7 +8,7 @@ class ProductForm(forms.ModelForm):
 
     class Meta:
         model = Product
-        fields = ["name", "image", "price", "quantity"]
+        fields = ["name", "price", "quantity"]
         widgets = {
             "price": forms.NumberInput(attrs={"class": "no-spinner"}),
             "quantity": forms.NumberInput(attrs={"class": "quantity-field"}),
