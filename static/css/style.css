@@ -208,6 +208,19 @@ th {
     min-height: 100px;
 }
 
+/* Price/Discount/Amount fields: hide the browser's built-in up/down
+   stepper arrows - Quantity fields deliberately keep them. */
+.no-spinner::-webkit-outer-spin-button,
+.no-spinner::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.no-spinner {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
 .actions {
     display: flex;
     gap: 8px;

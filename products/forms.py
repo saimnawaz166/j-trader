@@ -9,6 +9,9 @@ class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
         fields = ["name", "image", "price", "quantity"]
+        widgets = {
+            "price": forms.NumberInput(attrs={"class": "no-spinner"}),
+        }
 
     def clean_name(self):
         name = self.cleaned_data["name"].strip()
