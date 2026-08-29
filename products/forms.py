@@ -11,6 +11,7 @@ class ProductForm(forms.ModelForm):
         fields = ["name", "image", "price", "quantity"]
         widgets = {
             "price": forms.NumberInput(attrs={"class": "no-spinner"}),
+            "quantity": forms.NumberInput(attrs={"class": "quantity-field"}),
         }
 
     def clean_name(self):

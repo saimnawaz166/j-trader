@@ -134,6 +134,15 @@ class SmokeTestAllPagesAsAdmin(TestCase):
         self.assertIn('class="no-spinner"', resp.content.decode())
         self.assertIn("input.no-spinner", resp.content.decode())
 
+    def test_quantity_fields_have_wheel_guard(self):
+        # Quantity inputs (Stock In/Out) keep their spinner arrows but
+        # must still be covered by the wheel-blur guard.
+        resp = self.client.get("/inventory/add/")
+        self.assertIn('class="quantity-field"', resp.content.decode())
+
+        base_body = self.client.get("/").content.decode()
+        self.assertIn("input.quantity-field", base_body)
+
 
 class SmokeTestPagesAsStaff(TestCase):
     """A non-admin (staff) user should be able to use the app day-to-day,
