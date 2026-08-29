@@ -205,7 +205,7 @@
                     type="date"
                     name="date"
                     required
-                    value="{{ expense.date|date:'Y-m-d'|default:today|date:'Y-m-d' }}"
+                    value="{% if expense %}{{ expense.date|date:'Y-m-d' }}{% else %}{{ today|date:'Y-m-d' }}{% endif %}"
                 >
             </label>
 
