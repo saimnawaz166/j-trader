@@ -31,11 +31,15 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
+# NOTE: Django only auto-allows localhost/127.0.0.1 when ALLOWED_HOSTS is
+# completely empty - since '.vercel.app' is always appended below, that
+# list is never empty, so localhost has to be listed explicitly here too
+# (otherwise every local `runserver` request fails with DisallowedHost).
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
     if host.strip()
-] + ['.vercel.app']
+] + ['.vercel.app', 'localhost', '127.0.0.1']
 
 CSRF_TRUSTED_ORIGINS = ['https://*.vercel.app']
 

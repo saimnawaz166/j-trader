@@ -11,10 +11,32 @@ from django.core.management import call_command
 from django.test import TestCase
 from django.utils import timezone
 
+from django.test import Client
+
 from expenses.models import Expense
 from products.models import Product
 
 from .models import Customer, Invoice, InvoiceItem, StockIn, StockOut, Supplier
+
+
+class LocalHostAllowedTests(TestCase):
+    """Regression test: ALLOWED_HOSTS must never end up in a state where
+    localhost/127.0.0.1 get rejected with DisallowedHost. This broke once
+    already - appending '.vercel.app' unconditionally makes the list
+    non-empty, which defeats Django's "auto-allow localhost when
+    ALLOWED_HOSTS is empty and DEBUG=True" behavior local development
+    relies on."""
+
+    def test_localhost_and_127001_are_allowed(self):
+        from django.conf import settings
+
+        self.assertIn("localhost", settings.ALLOWED_HOSTS)
+        self.assertIn("127.0.0.1", settings.ALLOWED_HOSTS)
+
+    def test_request_with_localhost_host_header_is_not_rejected(self):
+        client = Client()
+        resp = client.get("/accounts/login/", HTTP_HOST="127.0.0.1")
+        self.assertEqual(resp.status_code, 200)
 
 
 class SmokeTestAllPagesAsAdmin(TestCase):
