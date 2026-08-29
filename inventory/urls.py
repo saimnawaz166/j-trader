@@ -7,19 +7,23 @@ urlpatterns = [
     path("", views.stock_in_list, name="stock_in_list"),
     path("data/", views.stock_in_data, name="stock_in_data"),
     path("add/", views.stock_in_create, name="stock_in_create"),
+    path("edit/<int:pk>/", views.stock_in_edit, name="stock_in_edit"),
 
     path("suppliers/", views.supplier_list, name="supplier_list"),
     path("suppliers/data/", views.supplier_data, name="supplier_data"),
     path("suppliers/add/", views.supplier_create, name="supplier_create"),
+    path("suppliers/edit/<int:pk>/", views.supplier_edit, name="supplier_edit"),
 
     path("stock-out/", views.stock_out_list, name="stock_out_list"),
     path("stock-out/data/", views.stock_out_data, name="stock_out_data"),
     path("stock-out/add/", views.stock_out_create, name="stock_out_create"),
+    path("stock-out/edit/<int:pk>/", views.stock_out_edit, name="stock_out_edit"),
 
     path("customers/", views.customer_list, name="customer_list"),
     path("customers/data/", views.customer_data, name="customer_data"),
     path("customers/add/", views.customer_create, name="customer_create"),
     path("customers/quick-add/", views.customer_quick_add, name="customer_quick_add"),
+    path("customers/edit/<int:pk>/", views.customer_edit, name="customer_edit"),
 
     path("invoices/", views.invoices, name="invoices"),
     path("invoices/data/", views.invoices_data, name="invoices_data"),

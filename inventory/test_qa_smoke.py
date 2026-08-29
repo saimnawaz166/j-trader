@@ -207,6 +207,8 @@ class SmokeTestPagesAsStaff(TestCase):
             "/accounts/users/add/",
             f"/inventory/invoices/{self.invoice.pk}/edit/",
         ]
+        # Supplier/Customer/StockIn/StockOut edit views are also
+        # admin-only; covered in detail in SupplierCustomerStockEditTests.
 
         for url in admin_only:
             with self.subTest(url=url):
@@ -475,6 +477,171 @@ class StockInOutValidationTests(TestCase):
         }, follow=True)
 
         self.assertEqual(StockIn.objects.count(), 0)
+
+
+class SupplierCustomerStockEditTests(TestCase):
+    """Supplier/Customer/StockIn/StockOut edit views - admin-only, with
+    the Edit link/button hidden from non-admins and shown to admins."""
+
+    def setUp(self):
+        self.supplier = Supplier.objects.create(name="Edit Supplier", phone="0300-1234567")
+        self.customer = Customer.objects.create(name="Edit Customer", phone="0300-7654321")
+        self.stock_in = StockIn.objects.create(
+            invoice_number="PUR0000010", supplier=self.supplier,
+            item_name="Raw Material", quantity=10, unit_cost="20.00",
+            total_amount="200.00", date=timezone.localdate(),
+        )
+        self.invoice_in = Invoice.objects.create(
+            invoice_number="PUR0000010", invoice_type=Invoice.PURCHASE,
+            supplier=self.supplier, date=timezone.localdate(),
+            subtotal="200.00", grand_total="200.00", discount="0",
+            paid_amount="50.00", remaining_amount="150.00",
+        )
+        InvoiceItem.objects.create(
+            invoice=self.invoice_in, item_name="Raw Material",
+            quantity=10, unit_price="20.00", total="200.00",
+        )
+        self.stock_out = StockOut.objects.create(
+            invoice_number="INV0000010", customer=self.customer,
+            item_name="Finished Good", quantity=2, unit_price="80.00",
+            total_amount="160.00", date=timezone.localdate(),
+        )
+        self.invoice_out = Invoice.objects.create(
+            invoice_number="INV0000010", invoice_type=Invoice.SALE,
+            customer=self.customer, date=timezone.localdate(),
+            subtotal="160.00", grand_total="160.00", discount="0",
+            paid_amount="60.00", remaining_amount="100.00",
+        )
+        InvoiceItem.objects.create(
+            invoice=self.invoice_out, item_name="Finished Good",
+            quantity=2, unit_price="80.00", total="160.00",
+        )
+
+    def _login_admin(self):
+        User.objects.create_superuser("admin", password="pass12345")
+        self.client.login(username="admin", password="pass12345")
+
+    def _login_staff(self):
+        User.objects.create_user("staff", password="pass12345")
+        self.client.login(username="staff", password="pass12345")
+
+    def test_admin_can_reach_all_edit_pages(self):
+        self._login_admin()
+        pages = [
+            f"/inventory/suppliers/edit/{self.supplier.pk}/",
+            f"/inventory/customers/edit/{self.customer.pk}/",
+            f"/inventory/edit/{self.stock_in.pk}/",
+            f"/inventory/stock-out/edit/{self.stock_out.pk}/",
+        ]
+        for url in pages:
+            with self.subTest(url=url):
+                resp = self.client.get(url)
+                self.assertEqual(resp.status_code, 200)
+
+    def test_staff_blocked_from_all_edit_pages(self):
+        self._login_staff()
+        pages = [
+            f"/inventory/suppliers/edit/{self.supplier.pk}/",
+            f"/inventory/customers/edit/{self.customer.pk}/",
+            f"/inventory/edit/{self.stock_in.pk}/",
+            f"/inventory/stock-out/edit/{self.stock_out.pk}/",
+        ]
+        for url in pages:
+            with self.subTest(url=url):
+                resp = self.client.get(url)
+                self.assertEqual(resp.status_code, 302)
+
+    def test_admin_sees_edit_links_in_data_endpoints(self):
+        self._login_admin()
+        endpoints = [
+            "/inventory/suppliers/data/", "/inventory/customers/data/",
+            "/inventory/data/", "/inventory/stock-out/data/",
+        ]
+        for url in endpoints:
+            with self.subTest(url=url):
+                resp = self.client.get(url + "?draw=1&start=0&length=10&search[value]=")
+                self.assertIn(">Edit<", resp.content.decode())
+
+    def test_staff_does_not_see_edit_links_in_data_endpoints(self):
+        self._login_staff()
+        endpoints = [
+            "/inventory/suppliers/data/", "/inventory/customers/data/",
+            "/inventory/data/", "/inventory/stock-out/data/",
+        ]
+        for url in endpoints:
+            with self.subTest(url=url):
+                resp = self.client.get(url + "?draw=1&start=0&length=10&search[value]=")
+                self.assertNotIn(">Edit<", resp.content.decode())
+
+    def test_edit_supplier_saves_changes(self):
+        self._login_admin()
+        resp = self.client.post(
+            f"/inventory/suppliers/edit/{self.supplier.pk}/",
+            {"name": "Renamed Supplier", "phone": "0300-9999999", "email": "", "address": ""},
+        )
+        self.assertRedirects(resp, "/inventory/suppliers/")
+        self.supplier.refresh_from_db()
+        self.assertEqual(self.supplier.name, "Renamed Supplier")
+        self.assertEqual(self.supplier.phone, "0300-9999999")
+
+    def test_edit_customer_saves_changes(self):
+        self._login_admin()
+        resp = self.client.post(
+            f"/inventory/customers/edit/{self.customer.pk}/",
+            {"name": "Renamed Customer", "phone": "0300-8888888", "email": "", "address": ""},
+        )
+        self.assertRedirects(resp, "/inventory/customers/")
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.name, "Renamed Customer")
+
+    def test_edit_stock_in_updates_linked_invoice_and_item(self):
+        self._login_admin()
+        resp = self.client.post(f"/inventory/edit/{self.stock_in.pk}/", {
+            "supplier": self.supplier.id, "item_name": "Updated Material",
+            "quantity": "20", "unit_cost": "25.00",
+            "date": timezone.localdate(), "notes": "edited",
+        })
+
+        self.assertRedirects(resp, "/inventory/")
+        self.stock_in.refresh_from_db()
+        self.assertEqual(self.stock_in.item_name, "Updated Material")
+        self.assertEqual(self.stock_in.quantity, 20)
+        self.assertEqual(self.stock_in.total_amount, 500)  # 20 * 25
+
+        self.invoice_in.refresh_from_db()
+        self.assertEqual(self.invoice_in.subtotal, 500)
+        self.assertEqual(self.invoice_in.grand_total, 500)  # discount stays 0
+        self.assertEqual(self.invoice_in.paid_amount, 50)  # preserved
+        self.assertEqual(self.invoice_in.remaining_amount, 450)  # 500 - 50
+
+        item = self.invoice_in.items.first()
+        self.assertEqual(item.item_name, "Updated Material")
+        self.assertEqual(item.quantity, 20)
+        self.assertEqual(item.total, 500)
+
+    def test_edit_stock_out_updates_linked_invoice_and_item(self):
+        self._login_admin()
+        resp = self.client.post(f"/inventory/stock-out/edit/{self.stock_out.pk}/", {
+            "customer": self.customer.id, "item_name": "Updated Good",
+            "quantity": "5", "unit_price": "100.00",
+            "date": timezone.localdate(), "notes": "edited",
+        })
+
+        self.assertRedirects(resp, "/inventory/stock-out/")
+        self.stock_out.refresh_from_db()
+        self.assertEqual(self.stock_out.item_name, "Updated Good")
+        self.assertEqual(self.stock_out.total_amount, 500)  # 5 * 100
+
+        self.invoice_out.refresh_from_db()
+        self.assertEqual(self.invoice_out.subtotal, 500)
+        self.assertEqual(self.invoice_out.grand_total, 500)
+        self.assertEqual(self.invoice_out.paid_amount, 60)  # preserved
+        self.assertEqual(self.invoice_out.remaining_amount, 440)  # 500 - 60
+
+        item = self.invoice_out.items.first()
+        self.assertEqual(item.item_name, "Updated Good")
+        self.assertEqual(item.quantity, 5)
+        self.assertEqual(item.total, 500)
 
 
 class MigrationConsistencyTests(TestCase):

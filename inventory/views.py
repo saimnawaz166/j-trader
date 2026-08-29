@@ -65,8 +65,14 @@ def _print_invoice_button(invoice_number):
 def stock_in_data(request):
 
     queryset = StockIn.objects.select_related("supplier").all()
+    can_edit = request.user.is_superuser
 
     def row(stock_in):
+        edit_link = (
+            f'<a href="{reverse("stock_in_edit", args=[stock_in.id])}" '
+            f'class="btn btn-secondary" style="padding: 8px 14px; font-size: 14px;">Edit</a> '
+        ) if can_edit else ""
+
         return {
             "invoice_number": f"<strong>{stock_in.invoice_number}</strong>",
             "date": str(stock_in.date),
@@ -75,7 +81,7 @@ def stock_in_data(request):
             "quantity": stock_in.quantity,
             "unit_cost": f"{stock_in.unit_cost:.0f}",
             "total_amount": f"<strong>{stock_in.total_amount:.0f}</strong>",
-            "actions": _print_invoice_button(stock_in.invoice_number),
+            "actions": edit_link + _print_invoice_button(stock_in.invoice_number),
         }
 
     return datatable_response(
@@ -153,6 +159,75 @@ def stock_in_create(request):
 
 
 @login_required
+@admin_required
+def stock_in_edit(request, pk):
+
+    stock_in = get_object_or_404(StockIn, pk=pk)
+    suppliers = Supplier.objects.all()
+
+    if request.method == "POST":
+
+        form = StockInForm(request.POST, instance=stock_in)
+
+        if form.is_valid():
+
+            with transaction.atomic():
+
+                updated = form.save()
+
+                # Keep the auto-generated Purchase Invoice (and its single
+                # line item) in sync with the edited values.
+                invoice = Invoice.objects.filter(
+                    invoice_number=updated.invoice_number,
+                    invoice_type=Invoice.PURCHASE,
+                ).first()
+
+                if invoice:
+                    invoice.supplier = updated.supplier
+                    invoice.date = updated.date
+                    invoice.subtotal = updated.total_amount
+                    invoice.grand_total = max(
+                        updated.total_amount - invoice.discount, Decimal("0")
+                    )
+                    invoice.remaining_amount = max(
+                        invoice.grand_total - invoice.paid_amount, Decimal("0")
+                    )
+                    invoice.notes = updated.notes
+                    invoice.save()
+
+                    item = invoice.items.first()
+
+                    if item:
+                        item.item_name = updated.item_name
+                        item.quantity = updated.quantity
+                        item.unit_price = updated.unit_cost
+                        item.total = updated.total_amount
+                        item.save()
+
+            messages.success(
+                request,
+                "Stock In record updated successfully."
+            )
+
+            return redirect("stock_in_list")
+
+        messages.error(request, _first_form_error(form))
+
+        return redirect("stock_in_edit", pk=pk)
+
+    context = {
+        "suppliers": suppliers,
+        "stock_in": stock_in,
+    }
+
+    return render(
+        request,
+        "inventory/stock_in_form.html",
+        context
+    )
+
+
+@login_required
 def supplier_list(request):
     return render(request, "inventory/supplier_list.html")
 
@@ -161,19 +236,26 @@ def supplier_list(request):
 def supplier_data(request):
 
     queryset = Supplier.objects.all()
+    can_edit = request.user.is_superuser
 
     def row(supplier):
+        actions = (
+            f'<a href="{reverse("supplier_edit", args=[supplier.id])}" '
+            f'class="btn btn-secondary">Edit</a>'
+        ) if can_edit else ""
+
         return {
             "name": f"<strong>{supplier.name}</strong>",
             "phone": supplier.phone or "-",
             "email": supplier.email or "-",
             "address": supplier.address or "-",
+            "actions": actions,
         }
 
     return datatable_response(
         request, queryset, row,
         search_fields=["name", "phone", "email", "address"],
-        order_fields=["name", "phone", "email", "address"],
+        order_fields=["name", "phone", "email", "address", None],
     )
 
 
@@ -206,6 +288,38 @@ def supplier_create(request):
 
 
 @login_required
+@admin_required
+def supplier_edit(request, pk):
+
+    supplier = get_object_or_404(Supplier, pk=pk)
+
+    if request.method == "POST":
+
+        form = SupplierForm(request.POST, instance=supplier)
+
+        if form.is_valid():
+
+            form.save()
+
+            messages.success(
+                request,
+                "Supplier updated successfully."
+            )
+
+            return redirect("supplier_list")
+
+        messages.error(request, _first_form_error(form))
+
+        return redirect("supplier_edit", pk=pk)
+
+    return render(
+        request,
+        "inventory/supplier_form.html",
+        {"supplier": supplier}
+    )
+
+
+@login_required
 def stock_out_list(request):
     return render(request, "inventory/stock_out_list.html")
 
@@ -214,8 +328,14 @@ def stock_out_list(request):
 def stock_out_data(request):
 
     queryset = StockOut.objects.select_related("customer").all()
+    can_edit = request.user.is_superuser
 
     def row(stock_out):
+        edit_link = (
+            f'<a href="{reverse("stock_out_edit", args=[stock_out.id])}" '
+            f'class="btn btn-secondary" style="padding: 8px 14px; font-size: 14px;">Edit</a> '
+        ) if can_edit else ""
+
         return {
             "invoice_number": f"<strong>{stock_out.invoice_number}</strong>",
             "date": str(stock_out.date),
@@ -224,7 +344,7 @@ def stock_out_data(request):
             "quantity": stock_out.quantity,
             "unit_price": f"{stock_out.unit_price:.0f}",
             "total_amount": f"<strong>{stock_out.total_amount:.0f}</strong>",
-            "actions": _print_invoice_button(stock_out.invoice_number),
+            "actions": edit_link + _print_invoice_button(stock_out.invoice_number),
         }
 
     return datatable_response(
@@ -302,6 +422,75 @@ def stock_out_create(request):
 
 
 @login_required
+@admin_required
+def stock_out_edit(request, pk):
+
+    stock_out = get_object_or_404(StockOut, pk=pk)
+    customers = Customer.objects.all()
+
+    if request.method == "POST":
+
+        form = StockOutForm(request.POST, instance=stock_out)
+
+        if form.is_valid():
+
+            with transaction.atomic():
+
+                updated = form.save()
+
+                # Keep the auto-generated Sale Invoice (and its single
+                # line item) in sync with the edited values.
+                invoice = Invoice.objects.filter(
+                    invoice_number=updated.invoice_number,
+                    invoice_type=Invoice.SALE,
+                ).first()
+
+                if invoice:
+                    invoice.customer = updated.customer
+                    invoice.date = updated.date
+                    invoice.subtotal = updated.total_amount
+                    invoice.grand_total = max(
+                        updated.total_amount - invoice.discount, Decimal("0")
+                    )
+                    invoice.remaining_amount = max(
+                        invoice.grand_total - invoice.paid_amount, Decimal("0")
+                    )
+                    invoice.notes = updated.notes
+                    invoice.save()
+
+                    item = invoice.items.first()
+
+                    if item:
+                        item.item_name = updated.item_name
+                        item.quantity = updated.quantity
+                        item.unit_price = updated.unit_price
+                        item.total = updated.total_amount
+                        item.save()
+
+            messages.success(
+                request,
+                "Stock Out record updated successfully."
+            )
+
+            return redirect("stock_out_list")
+
+        messages.error(request, _first_form_error(form))
+
+        return redirect("stock_out_edit", pk=pk)
+
+    context = {
+        "customers": customers,
+        "stock_out": stock_out,
+    }
+
+    return render(
+        request,
+        "inventory/stock_out_form.html",
+        context
+    )
+
+
+@login_required
 def customer_list(request):
     return render(request, "inventory/customer_list.html")
 
@@ -310,19 +499,26 @@ def customer_list(request):
 def customer_data(request):
 
     queryset = Customer.objects.all()
+    can_edit = request.user.is_superuser
 
     def row(customer):
+        actions = (
+            f'<a href="{reverse("customer_edit", args=[customer.id])}" '
+            f'class="btn btn-secondary">Edit</a>'
+        ) if can_edit else ""
+
         return {
             "name": f"<strong>{customer.name}</strong>",
             "phone": customer.phone or "-",
             "email": customer.email or "-",
             "address": customer.address or "-",
+            "actions": actions,
         }
 
     return datatable_response(
         request, queryset, row,
         search_fields=["name", "phone", "email", "address"],
-        order_fields=["name", "phone", "email", "address"],
+        order_fields=["name", "phone", "email", "address", None],
     )
 
 
@@ -351,6 +547,38 @@ def customer_create(request):
     return render(
         request,
         "inventory/customer_form.html"
+    )
+
+
+@login_required
+@admin_required
+def customer_edit(request, pk):
+
+    customer = get_object_or_404(Customer, pk=pk)
+
+    if request.method == "POST":
+
+        form = CustomerForm(request.POST, instance=customer)
+
+        if form.is_valid():
+
+            form.save()
+
+            messages.success(
+                request,
+                "Customer updated successfully."
+            )
+
+            return redirect("customer_list")
+
+        messages.error(request, _first_form_error(form))
+
+        return redirect("customer_edit", pk=pk)
+
+    return render(
+        request,
+        "inventory/customer_form.html",
+        {"customer": customer}
     )
 
 

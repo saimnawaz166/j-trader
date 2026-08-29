@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}Stock Out{% endblock %}
+{% block title %}{% if stock_out %}Edit Stock Out{% else %}Stock Out{% endif %}{% endblock %}
 
-{% block page_title %}Stock Out{% endblock %}
+{% block page_title %}{% if stock_out %}Edit Stock Out{% else %}Stock Out{% endif %}{% endblock %}
 
 {% block content %}
 
 <div class="page-header">
 
     <div>
-        <h1>Stock Out</h1>
+        <h1>{% if stock_out %}Edit Stock Out{% else %}Stock Out{% endif %}</h1>
         <p>Record outgoing inventory</p>
     </div>
 
@@ -35,7 +35,7 @@
 
             <input
                 type="text"
-                value="{{ next_invoice_number }}"
+                value="{% if stock_out %}{{ stock_out.invoice_number }}{% else %}{{ next_invoice_number }}{% endif %}"
                 disabled
             >
 
@@ -56,7 +56,9 @@
 
                 {% for customer in customers %}
 
-                <option value="{{ customer.id }}">
+                <option
+                    value="{{ customer.id }}"
+                    {% if stock_out and customer.id == stock_out.customer_id %}selected{% endif %}>
                     {{ customer.name }}
                 </option>
 
@@ -83,6 +85,7 @@
                 type="text"
                 name="item_name"
                 required
+                value="{{ stock_out.item_name|default:'' }}"
                 placeholder="Example: Steel Pipe 2 inch"
             >
 
@@ -99,6 +102,7 @@
                 class="quantity-field"
                 min="1"
                 required
+                value="{{ stock_out.quantity|default:'' }}"
                 placeholder="Enter quantity"
             >
 
@@ -116,6 +120,7 @@
                 step="0.01"
                 min="0"
                 required
+                value="{{ stock_out.unit_price|default:'' }}"
                 placeholder="Enter selling price"
             >
 
@@ -129,7 +134,7 @@
             <input
                 type="date"
                 name="date"
-                value="{{ today|date:'Y-m-d' }}"
+                value="{% if stock_out %}{{ stock_out.date|date:'Y-m-d' }}{% else %}{{ today|date:'Y-m-d' }}{% endif %}"
                 required
             >
 
@@ -142,8 +147,7 @@
 
             <textarea
                 name="notes"
-                placeholder="Optional notes..."
-            ></textarea>
+                placeholder="Optional notes...">{{ stock_out.notes|default:'' }}</textarea>
 
         </div>
 
@@ -151,7 +155,7 @@
         <button
             type="submit"
             class="btn btn-primary">
-            Stock Out
+            {% if stock_out %}Save Changes{% else %}Stock Out{% endif %}
         </button>
 
     </form>

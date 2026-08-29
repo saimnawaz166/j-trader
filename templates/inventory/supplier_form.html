@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}Add Supplier{% endblock %}
+{% block title %}{% if supplier %}Edit Supplier{% else %}Add Supplier{% endif %}{% endblock %}
 
-{% block page_title %}Add Supplier{% endblock %}
+{% block page_title %}{% if supplier %}Edit Supplier{% else %}Add Supplier{% endif %}{% endblock %}
 
 {% block content %}
 
 <div class="page-header">
 
-    <h1>Add Supplier</h1>
+    <h1>{% if supplier %}Edit Supplier{% else %}Add Supplier{% endif %}</h1>
 
     <a
         href="{% url 'supplier_list' %}"
@@ -33,6 +33,7 @@
                 type="text"
                 name="name"
                 required
+                value="{{ supplier.name|default:'' }}"
                 placeholder="Supplier name"
             >
 
@@ -46,6 +47,7 @@
             <input
                 type="text"
                 name="phone"
+                value="{{ supplier.phone|default:'' }}"
                 placeholder="Phone number"
             >
 
@@ -59,6 +61,7 @@
             <input
                 type="email"
                 name="email"
+                value="{{ supplier.email|default:'' }}"
                 placeholder="Email address"
             >
 
@@ -71,8 +74,7 @@
 
             <textarea
                 name="address"
-                placeholder="Supplier address..."
-            ></textarea>
+                placeholder="Supplier address...">{{ supplier.address|default:'' }}</textarea>
 
         </div>
 
@@ -80,7 +82,7 @@
         <button
             type="submit"
             class="btn btn-primary">
-            Save Supplier
+            {% if supplier %}Save Changes{% else %}Save Supplier{% endif %}
         </button>
 
     </form>
