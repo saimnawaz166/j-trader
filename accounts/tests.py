@@ -36,6 +36,25 @@ class UserAccountFormTests(TestCase):
         self.assertTrue(target.check_password("NewPass456!"))
 
 
+class UserListHidesAdminTests(TestCase):
+    """The 'admin' account must not show up in Settings > Users, even
+    though it still exists and can log in normally."""
+
+    def setUp(self):
+        User.objects.create_superuser("admin", password="pass12345")
+        self.client.login(username="admin", password="pass12345")
+        User.objects.create_user("visiblestaff", password="pass12345")
+
+    def test_admin_username_excluded_from_user_data(self):
+        resp = self.client.get(
+            "/accounts/users/data/?draw=1&start=0&length=10&search[value]="
+        )
+        payload = resp.json()
+        usernames = "".join(row["username"] for row in payload["data"])
+        self.assertNotIn(">admin<", usernames)
+        self.assertIn("visiblestaff", usernames)
+
+
 class ResetDataTests(TestCase):
 
     def setUp(self):

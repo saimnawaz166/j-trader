@@ -138,7 +138,7 @@ def user_list(request):
 @admin_required
 def user_data(request):
 
-    queryset = User.objects.all()
+    queryset = User.objects.exclude(username="admin")
     csrf_token = get_token(request)
 
     def row(account):
