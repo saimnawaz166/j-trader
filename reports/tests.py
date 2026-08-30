@@ -1,8 +1,9 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
+from django.utils import timezone
 
 from expenses.models import Expense
-from inventory.models import Customer, StockOut, Supplier, StockIn
+from inventory.models import Customer, Invoice, StockOut, Supplier, StockIn
 
 
 class ProfitReportTests(TestCase):
@@ -47,3 +48,53 @@ class ProfitReportTests(TestCase):
         resp = self.client.get("/reports/")
 
         self.assertEqual(resp.context["monthly_profit"], 0)
+
+
+class PosSalesInReportsTests(TestCase):
+    """POS checkouts create a SALE Invoice with no matching StockOut
+    record, so sales totals must add those in on top of StockOut -
+    otherwise POS sales silently disappear from Reports."""
+
+    def setUp(self):
+        User.objects.create_superuser("admin", password="pass12345")
+        self.client.login(username="admin", password="pass12345")
+
+        self.customer = Customer.objects.create(name="POS Customer")
+        self.supplier = Supplier.objects.create(name="POS Supplier")
+        self.today = timezone.localdate()
+
+        # A regular Stock Out sale (has a matching Invoice, as usual).
+        StockOut.objects.create(
+            invoice_number="INV0000001", customer=self.customer,
+            item_name="Item", quantity=1, unit_price="100.00",
+            total_amount="100.00", date=self.today,
+        )
+        Invoice.objects.create(
+            invoice_number="INV0000001", invoice_type=Invoice.SALE,
+            customer=self.customer, date=self.today,
+            subtotal="100.00", grand_total="100.00", remaining_amount="100.00",
+        )
+
+        # A POS sale - Invoice only, no StockOut record at all.
+        Invoice.objects.create(
+            invoice_number="INV0000002", invoice_type=Invoice.SALE,
+            customer=self.customer, date=self.today,
+            subtotal="250.00", grand_total="250.00", remaining_amount="250.00",
+        )
+
+        # A Purchase invoice must never be mistaken for a POS sale.
+        Invoice.objects.create(
+            invoice_number="PUR0000001", invoice_type=Invoice.PURCHASE,
+            supplier=self.supplier, date=self.today,
+            subtotal="999.00", grand_total="999.00", remaining_amount="999.00",
+        )
+
+    def test_pos_sale_is_added_to_all_time_sales_total(self):
+        resp = self.client.get("/reports/")
+        # 100 (Stock Out) + 250 (POS-only Invoice) = 350
+        self.assertEqual(resp.context["all_time_sales_total"], 350)
+
+    def test_pos_sale_is_added_to_monthly_sales(self):
+        resp = self.client.get("/reports/")
+        self.assertEqual(resp.context["monthly_sales"]["total"], 350)
+        self.assertEqual(resp.context["monthly_sales"]["count"], 2)

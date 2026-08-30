@@ -14,13 +14,25 @@ def _reports_context():
     today = timezone.localdate()
     month_start = today.replace(day=1)
 
+    # POS checkouts create a SALE Invoice directly, without a matching
+    # StockOut record (there's no per-line Stock Out entry for a POS
+    # cart) - so sales totals must add those Invoices in on top of
+    # StockOut, matched by excluding any invoice_number that IS backed
+    # by a StockOut (those are already counted via StockOut.total_amount).
+    pos_sale_invoices = Invoice.objects.filter(
+        invoice_type=Invoice.SALE
+    ).exclude(
+        invoice_number__in=StockOut.objects.values("invoice_number")
+    )
+
     # All-time sales, purchases & expenses - the primary profit figure is
     # based on these (not scoped to "this month"), so it never misses
     # entries just because they were logged with an older/different date.
 
-    all_time_sales_total = StockOut.objects.aggregate(
-        total=Sum("total_amount")
-    )["total"] or 0
+    all_time_sales_total = (
+        (StockOut.objects.aggregate(total=Sum("total_amount"))["total"] or 0)
+        + (pos_sale_invoices.aggregate(total=Sum("subtotal"))["total"] or 0)
+    )
 
     all_time_purchases_total = StockIn.objects.aggregate(
         total=Sum("total_amount")
@@ -38,12 +50,30 @@ def _reports_context():
 
     # Sales & purchases (this month) - shown as a secondary breakdown.
 
-    monthly_sales = StockOut.objects.filter(
+    monthly_sales_stockout = StockOut.objects.filter(
         date__gte=month_start
     ).aggregate(
         total=Sum("total_amount"),
         count=Count("id")
     )
+
+    monthly_pos_sales = pos_sale_invoices.filter(
+        date__gte=month_start
+    ).aggregate(
+        total=Sum("subtotal"),
+        count=Count("id")
+    )
+
+    monthly_sales = {
+        "total": (
+            (monthly_sales_stockout["total"] or 0)
+            + (monthly_pos_sales["total"] or 0)
+        ),
+        "count": (
+            (monthly_sales_stockout["count"] or 0)
+            + (monthly_pos_sales["count"] or 0)
+        ),
+    }
 
     monthly_purchases = StockIn.objects.filter(
         date__gte=month_start
